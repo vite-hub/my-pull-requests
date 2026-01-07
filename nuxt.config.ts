@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
 
   // https://nuxt.com/modules
-  modules: ['@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt'],
+  modules: ['@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt', 'nuxt-safe-runtime-config'],
 
   $production: {
     routeRules: {
@@ -16,6 +16,9 @@ export default defineNuxtConfig({
   // https://devtools.nuxt.com
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
+  runtimeConfig: {
+    githubToken: process.env.NUXT_GITHUB_TOKEN,
+  },
 
   // https://nuxt.com/docs/getting-started/upgrade#testing-nuxt-4
   compatibilityDate: '2025-01-01',
