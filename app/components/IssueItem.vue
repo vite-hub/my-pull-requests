@@ -1,15 +1,13 @@
 <script setup lang="ts">
-const props = defineProps<{ data: PullRequest }>()
+const props = defineProps<{ data: Issue }>()
 
 const owner = computed(() => props.data.repo.split('/')[0])
 const repoName = computed(() => props.data.repo.split('/')[1])
 const timeAgo = useTimeAgo(() => new Date(props.data.created_at))
 
-const stateIcons: Record<PullRequest['state'], string> = {
-  open: 'i-lucide-git-pull-request-arrow',
-  draft: 'i-lucide-git-pull-request-draft',
-  merged: 'i-lucide-git-merge',
-  closed: 'i-lucide-git-pull-request-closed',
+const stateIcons: Record<Issue['state'], string> = {
+  open: 'i-lucide-circle-dot',
+  closed: 'i-lucide-circle-check',
 }
 </script>
 
@@ -34,12 +32,7 @@ const stateIcons: Record<PullRequest['state'], string> = {
         >
           <UIcon
             :name="stateIcons[data.state]"
-            :class="{
-              'text-green-500 dark:text-green-400': data.state === 'open',
-              'text-neutral-500 dark:text-neutral-400': data.state === 'draft',
-              'text-purple-500 dark:text-purple-400': data.state === 'merged',
-              'text-red-500 dark:text-red-400': data.state === 'closed',
-            }"
+            :class="{ 'text-green-500 dark:text-green-400': data.state === 'open', 'text-purple-500 dark:text-purple-400': data.state === 'closed' }"
             class="size-4 sm:size-5 shrink-0"
           />
           <span class="truncate">{{ data.title }}</span>
