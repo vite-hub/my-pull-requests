@@ -146,47 +146,40 @@ const orderedItems = computed(() => {
       <USeparator class="mt-2 sm:mt-6 mb-6 sm:mb-10 w-1/2 mx-auto animate-pulse" />
     </div>
 
-    <UTabs
-      v-model="activeTab"
-      :items="[
-        { label: 'Pull Requests', value: 'prs', icon: 'i-lucide-git-pull-request' },
-        { label: 'Issues', value: 'issues', icon: 'i-lucide-circle-dot' },
-      ]"
-      variant="link"
-      class="mb-6"
-    />
-
-    <div class="relative">
-      <div class="flex justify-end absolute -top-10 lg:-top-12 right-0">
-        <UDropdownMenu
-          :items="items"
-          :content="{
-            align: 'start',
-            side: 'bottom',
-            sideOffset: 8,
-          }"
-          :ui="{
-            content: 'w-48',
-          }"
+    <div class="flex items-end justify-between border-b border-neutral-200 dark:border-neutral-800 mb-6">
+      <UTabs
+        v-model="activeTab"
+        :items="[
+          { label: 'Pull Requests', value: 'prs', icon: 'i-lucide-git-pull-request' },
+          { label: 'Issues', value: 'issues', icon: 'i-lucide-circle-dot' },
+        ]"
+        variant="link"
+        :ui="{ root: 'border-b-0' }"
+      />
+      <UDropdownMenu
+        :items="items"
+        :content="{ align: 'start', side: 'bottom', sideOffset: 8 }"
+        :ui="{ content: 'w-48' }"
+        size="xs"
+      >
+        <UButton
+          :label="orderKey === 'star' ? 'Stars' : order === 'asc' ? 'Oldest' : 'Newest'"
+          :icon="order === 'asc' ? 'i-lucide-arrow-up-narrow-wide': 'i-lucide-arrow-down-narrow-wide'"
+          color="neutral"
+          variant="soft"
           size="xs"
-        >
-          <UButton
-            :label="orderKey === 'star' ? 'Stars' : order === 'asc' ? 'Oldest' : 'Newest'"
-            :icon="order === 'asc' ? 'i-lucide-arrow-up-narrow-wide': 'i-lucide-arrow-down-narrow-wide' "
-            color="neutral"
-            variant="soft"
-            size="xs"
-          />
-        </UDropdownMenu>
-      </div>
-      <div class="flex flex-col gap-6 mt-5 sm:gap-10">
-        <template v-if="activeTab === 'prs'">
-          <PullRequest v-for="pr of orderedItems" :key="pr.url" :data="pr as PullRequest" />
-        </template>
-        <template v-else>
-          <IssueItem v-for="issue of orderedItems" :key="issue.url" :data="issue as Issue" />
-        </template>
-      </div>
+          class="mb-2"
+        />
+      </UDropdownMenu>
+    </div>
+
+    <div class="flex flex-col gap-6 sm:gap-10">
+      <template v-if="activeTab === 'prs'">
+        <PullRequest v-for="pr of orderedItems" :key="pr.url" :data="pr as PullRequest" />
+      </template>
+      <template v-else>
+        <IssueItem v-for="issue of orderedItems" :key="issue.url" :data="issue as Issue" />
+      </template>
     </div>
   </UContainer>
 </template>
