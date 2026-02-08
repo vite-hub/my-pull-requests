@@ -17,7 +17,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
-    githubToken: process.env.NUXT_GITHUB_TOKEN,
+    // Set via runtime env binding (Cloudflare Workers secret): NUXT_GITHUB_TOKEN
+    githubToken: '',
   },
 
   // https://nuxt.com/docs/getting-started/upgrade#testing-nuxt-4

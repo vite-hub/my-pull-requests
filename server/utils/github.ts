@@ -1,10 +1,14 @@
 import { Octokit } from 'octokit'
+import { createError } from 'h3'
 
 let _octokit: Octokit
 
 export function useOctokit() {
   if (!_octokit) {
     const { githubToken } = useRuntimeConfig()
+    if (!githubToken) {
+      throw createError({ statusCode: 500, message: 'Server misconfigured: set NUXT_GITHUB_TOKEN' })
+    }
     _octokit = new Octokit({ auth: githubToken })
   }
   return _octokit

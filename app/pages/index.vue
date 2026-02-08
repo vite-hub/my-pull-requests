@@ -1,9 +1,31 @@
 <script setup lang="ts">
 const colorMode = useColorMode()
-const [{ data: contributions }, { data: issuesData }] = await Promise.all([
+const [{ data: contributions, error: contributionsError }, { data: issuesData }] = await Promise.all([
   useFetch<Contributions>('/api/contributions'),
   useFetch<Issues>('/api/issues'),
 ])
+
+if (contributionsError.value) {
+  const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
+  const getNumber = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
+  const getString = (v: unknown): string | undefined => typeof v === 'string' ? v : undefined
+
+  const err = contributionsError.value
+  const statusCode = isRecord(err)
+    ? (getNumber(err.statusCode)
+      ?? getNumber(err.status)
+      ?? (isRecord(err.response) ? getNumber(err.response.status) : undefined)
+      ?? 500)
+    : 500
+
+  const dataMessage = isRecord(err) && isRecord(err.data) ? getString(err.data.message) : undefined
+  const message = dataMessage ?? (err instanceof Error ? err.message : 'Failed to load contributions')
+
+  throw createError({
+    statusCode,
+    message,
+  })
+}
 
 if (!contributions.value) {
   throw createError('Could not load User activity')

@@ -1,4 +1,5 @@
 name = "my-pull-requests"
+account_id = "ba6e044dfdaaffec3cac45e9feccd237"
 main = ".output/server/index.mjs"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
