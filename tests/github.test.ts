@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { githubGraphql } from '@vite-hub/source'
+import { getViteHubErrorShape } from '@vite-hub/runtime'
+
 import { mapGitHubActivity } from '../server/utils/github.ts'
 
 const publicRepo = {
@@ -31,4 +34,44 @@ test('maps public GitHub activity and excludes private or unmerged records', () 
   assert.equal(activity.contributions.user.name, 'onmax')
   assert.deepEqual(activity.contributions.prs.map(pr => pr.state), ['open', 'merged'])
   assert.deepEqual(activity.issues.issues.map(issue => issue.number), [4])
+})
+
+test('GitHub GraphQL Source deduplicates and scopes cached results by auth', async () => {
+  let calls = 0
+  let token = 'first'
+  const source = githubGraphql<{ viewer: string }>({
+    auth: () => token,
+    cache: { maxAge: 60 },
+    query: '{ viewer { login } }',
+    async request(_query, parameters) {
+      calls += 1
+      return { viewer: String(parameters?.headers && (parameters.headers as Record<string, string>).authorization) }
+    },
+  })
+  const context = { rootDir: process.cwd() }
+
+  const [first, duplicate] = await Promise.all([
+    source.getItem('result', context),
+    source.getItem('result', context),
+  ])
+  token = 'second'
+  const second = await source.getItem('result', context)
+
+  assert.equal(calls, 2)
+  assert.deepEqual(first.data, duplicate.data)
+  assert.notDeepEqual(first.data, second.data)
+})
+
+test('GitHub GraphQL Source normalizes rate limits', async () => {
+  const source = githubGraphql({
+    query: '{ viewer { login } }',
+    async request() {
+      throw { headers: { 'x-ratelimit-remaining': '0', 'status': '403' } }
+    },
+  })
+
+  await assert.rejects(
+    source.getItem('result', { rootDir: process.cwd() }),
+    error => getViteHubErrorShape(error)?.details?.status === 429,
+  )
 })

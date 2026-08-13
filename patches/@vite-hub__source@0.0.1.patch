@@ -1,0 +1,102 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 67909c5a9f239189eba06e31c779f41be3a678c8..515f1aa37eb344b8779c49eba4fa868a32f7cb6f 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -132,6 +132,17 @@ interface GitHubSourceOptions {
+ //#region src/sources/github/index.d.ts
+ declare function github<const TKey extends string = string>(options: GitHubSourceOptions): Source<TKey>;
+ //#endregion
++//#region src/sources/github-graphql.d.ts
++type GitHubGraphqlRequest<TData = unknown> = (query: string, parameters?: Record<string, unknown>) => Promise<TData>;
++interface GitHubGraphqlSourceOptions<TData = unknown, TVariables extends Record<string, unknown> = Record<string, unknown>> {
++  auth?: false | string | (() => string | undefined);
++  cache?: false | SourceCacheOptions;
++  query: string;
++  request?: GitHubGraphqlRequest<TData>;
++  variables?: TVariables | ((ctx: SourceContext) => TVariables);
++}
++declare function githubGraphql<TData = unknown, TVariables extends Record<string, unknown> = Record<string, unknown>>(options: GitHubGraphqlSourceOptions<TData, TVariables>): Source<"result", TData>;
++//#endregion
+ //#region src/sources/glob.d.ts
+ interface GlobSourceOptions {
+   cwd?: string;
+@@ -179,4 +190,4 @@ interface McpResourcesSourceOptions<TKey extends string = string> {
+ }
+ declare function mcpResources<const TKey extends string = string>(options: McpResourcesSourceOptions<TKey>): Source<TKey>;
+ //#endregion
+-export { type FileSourceInlineOptions, type FileSourceOptions, type FileSourcePathOptions, type GitHubSourceOptions, type GlobSourceOptions, type McpResourceContent, type McpResourceDescriptor, type McpResourcesClient, type McpResourcesClientConfig, type McpResourcesRequestOptions, type McpResourcesServer, type McpResourcesSourceOptions, type McpResourcesTransportConfig, type ReadSourceOptions, type ReadSourceResult, type Source, type SourceCacheOptions, type SourceContent, type SourceContext, type SourceData, type SourceErrorCode, type SourceItem, type SourceKey, type SourceListEntry, type SourceMap, type SourceMetadata, type SourceName, type SourceReader, type SourceSearchHit, type SourceSearchQuery, clearSources, custom, defineSource, defineSources, file, getRegisteredSource, github, glob, markdown, mcpResources, registerSource, registerSources, useSource };
+\ No newline at end of file
++export { type FileSourceInlineOptions, type FileSourceOptions, type FileSourcePathOptions, type GitHubGraphqlRequest, type GitHubGraphqlSourceOptions, type GitHubSourceOptions, type GlobSourceOptions, type McpResourceContent, type McpResourceDescriptor, type McpResourcesClient, type McpResourcesClientConfig, type McpResourcesRequestOptions, type McpResourcesServer, type McpResourcesSourceOptions, type McpResourcesTransportConfig, type ReadSourceOptions, type ReadSourceResult, type Source, type SourceCacheOptions, type SourceContent, type SourceContext, type SourceData, type SourceErrorCode, type SourceItem, type SourceKey, type SourceListEntry, type SourceMap, type SourceMetadata, type SourceName, type SourceReader, type SourceSearchHit, type SourceSearchQuery, clearSources, custom, defineSource, defineSources, file, getRegisteredSource, github, githubGraphql, glob, markdown, mcpResources, registerSource, registerSources, useSource };
+diff --git a/dist/index.js b/dist/index.js
+index 472c5343d79c7c1840b2ff8dd0efa1b23b5d3980..c96643adad63799ec447b66cd89048b3f1f828bb 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -10,0 +11 @@ import { Cause, Data, Effect, Exit, Ref, Scope } from "effect";
++import { graphql } from "@octokit/graphql";
+@@ -783,0 +785,63 @@ function github(options) {
++//#region src/sources/github-graphql.ts
++function githubGraphql(options) {
++	let cached;
++	let pending;
++	function resolveAuth() {
++		const token = typeof options.auth === "function" ? options.auth() : options.auth;
++		return typeof token === "string" && token.length > 0 ? token : void 0;
++	}
++	async function load(ctx) {
++		const token = resolveAuth();
++		const variables = typeof options.variables === "function" ? options.variables(ctx) : options.variables;
++		try {
++			return await (options.request || graphql)(options.query, {
++				...variables,
++				headers: token ? { authorization: `bearer ${token}` } : void 0,
++				request: ctx.abortSignal ? { signal: ctx.abortSignal } : void 0
++			});
++		} catch (error) {
++			const headers = typeof error === "object" && error && "headers" in error && typeof error.headers === "object" && error.headers ? error.headers : void 0;
++			const rateLimited = headers?.["x-ratelimit-remaining"] === "0";
++			const rawStatus = typeof error === "object" && error && "status" in error ? error.status : headers?.status;
++			const status = rateLimited ? 429 : typeof rawStatus === "number" ? rawStatus : typeof rawStatus === "string" && /^\d+$/.test(rawStatus) ? Number(rawStatus) : 502;
++			throw sourceError(`[vitehub] githubGraphql request failed${status ? ` with ${status}` : ""}.`, {
++				cause: error,
++				details: { provider: "github", rateLimited, status }
++			});
++		}
++	}
++	async function getData(ctx) {
++		const token = resolveAuth();
++		const variables = typeof options.variables === "function" ? options.variables(ctx) : options.variables;
++		const identity = JSON.stringify([token, variables]);
++		if (cached?.identity === identity && cached.expiresAt > Date.now()) return cached.data;
++		if (ctx.abortSignal) return await load(ctx);
++		if (pending?.identity === identity) return await pending.promise;
++		const promise = load(ctx).then((data) => {
++			const maxAge = options.cache && options.cache.maxAge;
++			if (maxAge) cached = { data, expiresAt: Date.now() + maxAge * 1e3, identity };
++			return data;
++		}).finally(() => {
++			if (pending?.promise === promise) pending = void 0;
++		});
++		pending = { identity, promise };
++		return await promise;
++	}
++	return {
++		cache: options.cache,
++		fingerprint: {
++			provider: "github-graphql",
++			query: options.query,
++			variables: typeof options.variables === "function" ? "dynamic" : options.variables
++		},
++		name: "github-graphql",
++		async getKeys() {
++			return ["result"];
++		},
++		async getItem(key, ctx) {
++			if (key !== "result") throw sourceError(`[vitehub] githubGraphql could not find ${JSON.stringify(key)}.`);
++			return { key, data: await getData(ctx) };
++		}
++	};
++}
++//#endregion
+@@ -1203 +1267 @@ function mcpResources(options) {
+-export { clearSources, custom, defineSource, defineSources, file, getRegisteredSource, github, glob, markdown, mcpResources, registerSource, registerSources, useSource };
++export { clearSources, custom, defineSource, defineSources, file, getRegisteredSource, github, githubGraphql, glob, markdown, mcpResources, registerSource, registerSources, useSource };
