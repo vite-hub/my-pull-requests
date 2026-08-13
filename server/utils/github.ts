@@ -1,6 +1,7 @@
-import { createOctokit } from '@github-tools/sdk'
+import { graphql } from '@octokit/graphql'
 import { custom, registerSource, useSource, type Source } from '@vite-hub/source'
 import { createError } from 'h3'
+import { defineCachedFunction } from 'nitro/cache'
 import { useRuntimeConfig } from 'nitro/runtime-config'
 
 type ActivityKey = 'contributions' | 'issues'
@@ -49,9 +50,20 @@ const query = `query($pullRequests: String!, $issues: String!) {
 
 export function githubStatus(error: unknown) {
   if (!error || typeof error !== 'object') return
-  const headers = 'headers' in error && error.headers && typeof error.headers === 'object' ? error.headers : undefined
+  const response = 'response' in error && error.response && typeof error.response === 'object' ? error.response : undefined
+  const headers = response && 'headers' in response && response.headers && typeof response.headers === 'object'
+    ? response.headers
+    : 'headers' in error && error.headers && typeof error.headers === 'object'
+      ? error.headers
+      : undefined
   if (headers && 'x-ratelimit-remaining' in headers && headers['x-ratelimit-remaining'] === '0') return 429
-  const status = 'status' in error ? error.status : headers && 'status' in headers ? headers.status : undefined
+  const status = 'status' in error
+    ? error.status
+    : response && 'status' in response
+      ? response.status
+      : headers && 'status' in headers
+        ? headers.status
+        : undefined
   return typeof status === 'number' ? status : typeof status === 'string' ? Number(status) : undefined
 }
 
@@ -98,10 +110,12 @@ export function mapGitHubActivity(data: GitHubActivity) {
 type Activity = ReturnType<typeof mapGitHubActivity>
 
 async function fetchActivity() {
+  const token = useRuntimeConfig().githubToken
+  if (!token) throw createError({ statusCode: 500, message: 'Server misconfigured: set NUXT_GITHUB_TOKEN' })
+
   try {
-    const token = useRuntimeConfig().githubToken
-    if (!token) throw createError({ statusCode: 500, message: 'Server misconfigured: set NUXT_GITHUB_TOKEN' })
-    const data = await createOctokit(token).graphql<GitHubActivity>(query, {
+    const data = await graphql<GitHubActivity>(query, {
+      headers: { authorization: `bearer ${token}` },
       issues: 'type:issue author:@me is:public',
       pullRequests: 'type:pr author:@me is:public',
     })
@@ -117,13 +131,19 @@ async function fetchActivity() {
   }
 }
 
+const getActivity = defineCachedFunction(fetchActivity, {
+  maxAge: 60 * 5,
+  name: 'github-activity',
+  swr: false,
+})
+
 const githubActivity = custom({
   name: 'github-activity',
   async getKeys() {
     return ['contributions', 'issues']
   },
   async getItem(key) {
-    return { key, data: (await fetchActivity())[key] }
+    return { key, data: (await getActivity())[key] }
   },
 } satisfies Source<ActivityKey, Activity[ActivityKey]>)
 
