@@ -1,7 +1,9 @@
-import { githubGraphql, registerSource, useSource } from '@vite-hub/source'
-import { getViteHubErrorShape } from '@vite-hub/runtime'
+import { createOctokit } from '@github-tools/sdk'
+import { custom, registerSource, useSource, type Source } from '@vite-hub/source'
 import { createError } from 'h3'
 import { useRuntimeConfig } from 'nitro/runtime-config'
+
+type ActivityKey = 'contributions' | 'issues'
 
 type GitHubItem = {
   createdAt: string
@@ -45,6 +47,14 @@ const query = `query($pullRequests: String!, $issues: String!) {
   }
 }`
 
+export function githubStatus(error: unknown) {
+  if (!error || typeof error !== 'object') return
+  const headers = 'headers' in error && error.headers && typeof error.headers === 'object' ? error.headers : undefined
+  if (headers && 'x-ratelimit-remaining' in headers && headers['x-ratelimit-remaining'] === '0') return 429
+  const status = 'status' in error ? error.status : headers && 'status' in headers ? headers.status : undefined
+  return typeof status === 'number' ? status : typeof status === 'string' ? Number(status) : undefined
+}
+
 export function mapGitHubActivity(data: GitHubActivity) {
   const user = {
     avatar: data.viewer.avatarUrl,
@@ -85,19 +95,37 @@ export function mapGitHubActivity(data: GitHubActivity) {
   }
 }
 
-const githubActivity = githubGraphql<GitHubActivity>({
-  auth: () => {
+type Activity = ReturnType<typeof mapGitHubActivity>
+
+async function fetchActivity() {
+  try {
     const token = useRuntimeConfig().githubToken
     if (!token) throw createError({ statusCode: 500, message: 'Server misconfigured: set NUXT_GITHUB_TOKEN' })
-    return token
+    const data = await createOctokit(token).graphql<GitHubActivity>(query, {
+      issues: 'type:issue author:@me is:public',
+      pullRequests: 'type:pr author:@me is:public',
+    })
+    return mapGitHubActivity(data)
+  }
+  catch (error) {
+    const status = githubStatus(error)
+    if (status === 401) throw createError({ statusCode: 401, message: 'GitHub token invalid/expired' })
+    if (status === 429) throw createError({ statusCode: 429, message: 'GitHub rate limit exceeded' })
+    if (status === 403) throw createError({ statusCode: 403, message: 'GitHub API forbidden' })
+    if (status) throw createError({ statusCode: 502, message: 'Failed to fetch GitHub activity' })
+    throw error
+  }
+}
+
+const githubActivity = custom({
+  name: 'github-activity',
+  async getKeys() {
+    return ['contributions', 'issues']
   },
-  cache: { maxAge: 5 * 60 },
-  query,
-  variables: {
-    issues: 'type:issue author:@me is:public',
-    pullRequests: 'type:pr author:@me is:public',
+  async getItem(key) {
+    return { key, data: (await fetchActivity())[key] }
   },
-})
+} satisfies Source<ActivityKey, Activity[ActivityKey]>)
 
 declare global {
   interface ViteHubSourceMap {
@@ -107,20 +135,8 @@ declare global {
 
 registerSource('githubActivity', githubActivity)
 
-type Activity = ReturnType<typeof mapGitHubActivity>
-
-export async function readGitHubActivity<TKey extends keyof Activity>(key: TKey): Promise<Activity[TKey]> {
-  try {
-    const item = await useSource('githubActivity').get('result')
-    if (!item.data) throw createError({ statusCode: 500, message: 'GitHub activity source returned no data' })
-    return mapGitHubActivity(item.data)[key]
-  }
-  catch (error) {
-    const status = getViteHubErrorShape(error)?.details?.status
-    if (status === 401) throw createError({ statusCode: 401, message: 'GitHub token invalid/expired' })
-    if (status === 429) throw createError({ statusCode: 429, message: 'GitHub rate limit exceeded' })
-    if (status === 403) throw createError({ statusCode: 403, message: 'GitHub API forbidden' })
-    if (typeof status === 'number') throw createError({ statusCode: 502, message: 'Failed to fetch GitHub activity' })
-    throw error
-  }
+export async function readGitHubActivity<TKey extends ActivityKey>(key: TKey): Promise<Activity[TKey]> {
+  const item = await useSource('githubActivity').get(key)
+  if (!item.data) throw createError({ statusCode: 500, message: 'GitHub activity source returned no data' })
+  return item.data as Activity[TKey]
 }

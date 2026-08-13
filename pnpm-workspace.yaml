@@ -20,5 +20,4 @@ minimumReleaseAgeExclude:
   - unrouting@0.2.3
 
 patchedDependencies:
-  '@vite-hub/source@0.0.1': patches/@vite-hub__source@0.0.1.patch
   pkce-challenge@5.0.1: patches/pkce-challenge@5.0.1.patch

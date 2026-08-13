@@ -15,11 +15,10 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@github-tools/sdk": "1.11.1",
     "@iconify-json/lucide": "^1.2.68",
     "@iconify-json/simple-icons": "^1.2.52",
     "@nuxt/ui": "^4.10.0",
-    "@octokit/graphql": "^9.0.4",
-    "@vite-hub/runtime": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@e1ed9ef1bc8340ab40063f72aa860c4c9936431a",
     "@vite-hub/source": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@e1ed9ef1bc8340ab40063f72aa860c4c9936431a",
     "@vueuse/core": "^14.4.0",
     "@vueuse/nuxt": "^14.4.0",
