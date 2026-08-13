@@ -4,7 +4,7 @@ import { joinURL } from 'ufo'
 
 export default defineEventHandler(async (event) => {
   const domain = getRequestURL(event).origin
-  const { user, prs } = (await readGitHubActivity()).contributions
+  const { user, prs } = (await readGitHubActivity(event)).contributions
   const feed = new Feed({
     title: `${user.name} is contributing...`,
     description: `Discover ${user.name}'s recent pull requests on GitHub`,

@@ -1,3 +1,3 @@
 import { defineEventHandler } from 'h3'
 
-export default defineEventHandler(async () => (await readGitHubActivity()).issues)
+export default defineEventHandler(async event => (await readGitHubActivity(event)).issues)

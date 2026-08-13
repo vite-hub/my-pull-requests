@@ -1,6 +1,6 @@
 import { graphql } from '@octokit/graphql'
 import { custom, registerSource, useSource, type Source } from '@vite-hub/source'
-import { createError } from 'h3'
+import { createError, type H3Event } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
 import { useRuntimeConfig } from 'nitro/runtime-config'
 
@@ -129,19 +129,13 @@ async function fetchActivity() {
   }
 }
 
-const getActivity = defineCachedFunction(fetchActivity, {
-  maxAge: 60 * 5,
-  name: 'github-activity',
-  swr: false,
-})
-
 const githubActivity = custom({
   name: 'github-activity',
   async getKeys() {
     return ['activity']
   },
   async getItem(key) {
-    return { key, data: await getActivity() }
+    return { key, data: await fetchActivity() }
   },
 } satisfies Source<'activity', Activity>)
 
@@ -153,8 +147,17 @@ declare global {
 
 registerSource('githubActivity', githubActivity)
 
-export async function readGitHubActivity() {
+const getActivity = defineCachedFunction(async (_event: H3Event) => {
   const item = await useSource('githubActivity').get('activity')
   if (!item.data) throw createError({ statusCode: 500, message: 'GitHub activity source returned no data' })
   return item.data
+}, {
+  getKey: () => 'activity',
+  maxAge: 60 * 5,
+  name: 'github-activity',
+  swr: false,
+})
+
+export function readGitHubActivity(event: H3Event) {
+  return getActivity(event)
 }
