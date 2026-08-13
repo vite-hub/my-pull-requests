@@ -34,6 +34,7 @@
     "eslint": "^10.8.0",
     "nitro": "3.0.260610-beta",
     "nuxt": "npm:nuxt-nightly@5.0.0-29776765.204647f9",
+    "nuxt-skill-hub": "0.1.1",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.9",
     "wrangler": "^4.119.0"

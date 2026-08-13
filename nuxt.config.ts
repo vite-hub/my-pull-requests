@@ -1,9 +1,10 @@
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt'],
+  modules: ['@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt', 'nuxt-skill-hub'],
 
   $production: {
     routeRules: {
       '/': { isr: 60 * 5 },
+      '/api/activity': { isr: 60 * 5 },
       '/api/contributions': { isr: 60 * 5 },
       '/api/issues': { isr: 60 * 5 },
       '/feed.xml': { isr: 60 * 5 },
@@ -25,5 +26,10 @@ export default defineNuxtConfig({
         quotes: 'single',
       },
     },
+  },
+
+  skillHub: {
+    targets: ['codex'],
+    generationMode: 'prepare',
   },
 })

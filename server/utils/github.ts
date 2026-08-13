@@ -4,8 +4,6 @@ import { createError } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
 import { useRuntimeConfig } from 'nitro/runtime-config'
 
-type ActivityKey = 'contributions' | 'issues'
-
 type GitHubItem = {
   createdAt: string
   isDraft?: boolean
@@ -140,12 +138,12 @@ const getActivity = defineCachedFunction(fetchActivity, {
 const githubActivity = custom({
   name: 'github-activity',
   async getKeys() {
-    return ['contributions', 'issues']
+    return ['activity']
   },
   async getItem(key) {
-    return { key, data: (await getActivity())[key] }
+    return { key, data: await getActivity() }
   },
-} satisfies Source<ActivityKey, Activity[ActivityKey]>)
+} satisfies Source<'activity', Activity>)
 
 declare global {
   interface ViteHubSourceMap {
@@ -155,8 +153,8 @@ declare global {
 
 registerSource('githubActivity', githubActivity)
 
-export async function readGitHubActivity<TKey extends ActivityKey>(key: TKey): Promise<Activity[TKey]> {
-  const item = await useSource('githubActivity').get(key)
+export async function readGitHubActivity() {
+  const item = await useSource('githubActivity').get('activity')
   if (!item.data) throw createError({ statusCode: 500, message: 'GitHub activity source returned no data' })
-  return item.data as Activity[TKey]
+  return item.data
 }
