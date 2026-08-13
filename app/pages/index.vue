@@ -173,7 +173,8 @@ const orderedItems = computed(() => {
           { label: 'Issues', value: 'issues', icon: 'i-lucide-circle-dot' },
         ]"
         variant="link"
-        :ui="{ root: 'border-b-0' }"
+        :content="false"
+        :ui="{ list: 'border-b-0' }"
       />
       <UDropdownMenu
         :items="items"
