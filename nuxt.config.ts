@@ -1,8 +1,5 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-
-  // https://nuxt.com/modules
-  modules: ['@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt', 'nuxt-safe-runtime-config'],
+  modules: ['@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt'],
 
   $production: {
     routeRules: {
@@ -13,19 +10,15 @@ export default defineNuxtConfig({
     },
   },
 
-  // https://devtools.nuxt.com
-  devtools: { enabled: true },
+  devtools: false,
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
-    // Set via runtime env binding (Cloudflare Workers secret): NUXT_GITHUB_TOKEN
     githubToken: '',
   },
 
-  // https://nuxt.com/docs/getting-started/upgrade#testing-nuxt-4
-  compatibilityDate: '2025-01-01',
+  compatibilityDate: '2026-06-30',
   nitro: { preset: 'cloudflare-module' },
 
-  // https://eslint.nuxt.com
   eslint: {
     config: {
       stylistic: {

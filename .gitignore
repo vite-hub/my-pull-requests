@@ -8,3 +8,4 @@ dist
 .data
 .DS_Store
 .vercel
+.wrangler

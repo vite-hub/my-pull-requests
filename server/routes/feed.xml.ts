@@ -1,10 +1,10 @@
 import { Feed } from 'feed'
+import { appendHeader, defineEventHandler, getRequestURL } from 'h3'
 import { joinURL } from 'ufo'
-import { getRequestURL } from 'h3'
 
 export default defineEventHandler(async (event) => {
   const domain = getRequestURL(event).origin
-  const { user, prs } = await $fetch <Contributions> ('/api/contributions')
+  const { user, prs } = await readGitHubActivity('contributions')
   const feed = new Feed({
     title: `${user.name} is contributing...`,
     description: `Discover ${user.name}'s recent pull requests on GitHub`,
