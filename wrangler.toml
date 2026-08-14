@@ -10,14 +10,3 @@ directory = ".output/public"
 [[kv_namespaces]]
 binding = "KV"
 id = "95ebec0a7edc49eeb70a9fe1500bbd83"
-
-[[send_email]]
-name = "EMAIL"
-
-[[workflows]]
-binding = "WORKFLOW_6D6F6E74686C792D7265636170"
-class_name = "ViteHubMonthlyRecap9c9cc034Workflow"
-name = "workflow--6d6f6e74686c792d7265636170"
-
-[triggers]
-crons = ["0 8 1 * *"]
