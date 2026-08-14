@@ -32,7 +32,9 @@ export default defineNuxtConfig({
     name: 'my-pull-requests',
     preset: 'cloudflare',
     kv: true,
-    schedule: true,
+    schedule: {
+      providerOutput: 'nitro',
+    },
     workflow: true,
     email: {
       driver: 'unemail/driver/cloudflare-email',
