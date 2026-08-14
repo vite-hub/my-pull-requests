@@ -1,0 +1,32 @@
+diff --git a/dist/vite.js b/dist/vite.js
+index d0fd5e71b41dbf0f4ddb4dceadcf91097c02a5b4..1265e65ffc5899c5c5feb36daf5ce215508390b2 100644
+--- a/dist/vite.js
++++ b/dist/vite.js
+@@ -303,6 +303,7 @@ async function writeOwnedCloudflareKVBindings(rootDir, bindings) {
+ }
+ function serializeCloudflareRuntime(config) {
+ 	return [
++		`import { env as cloudflareEnv } from "cloudflare:workers";`,
+ 		`import { createStorage } from ${JSON.stringify(UNSTORAGE_IMPORT_ID)};`,
+ 		`import createDriver from ${JSON.stringify(CLOUDFLARE_KV_DRIVER_IMPORT_ID)};`,
+ 		`import { kvResult } from ${JSON.stringify(KV_ERRORS_IMPORT_ID)};`,
+@@ -321,7 +322,7 @@ function serializeCloudflareRuntime(config) {
+ 		"  const store = resolveStoreConfig(name);",
+ 		"  const existing = storages.get(name);",
+ 		"  if (existing) return existing;",
+-		"  const storage = createStorage({ driver: createDriver(store) });",
++		"  const storage = createStorage({ driver: createDriver({ ...store, binding: cloudflareEnv[store.binding] }) });",
+ 		"  storages.set(name, storage);",
+ 		"  return storage;",
+ 		"}",
+@@ -364,6 +365,10 @@ function hubKv(options) {
+ 			return { resolve: { noExternal: mergeNoExternal(config.resolve?.noExternal) } };
+ 		},
+ 		resolveId(id, importer, resolveOptions) {
++			if (id === "cloudflare:workers" && resolveOptions?.ssr && isCloudflareKVConfig(getConfig().kv)) return {
++				external: true,
++				id
++			};
+ 			if (id === UPSTASH_DRIVER_IMPORT_ID && resolveOptions?.ssr && !hasUpstashStore(getConfig().kv) && isKVOptionalUpstashImport(id, importer)) return {
+ 				external: true,
+ 				id
