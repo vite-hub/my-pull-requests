@@ -2,6 +2,7 @@
 const route = useRoute()
 const toast = useToast()
 const month = String(route.params.month)
+const shareUrl = useRequestURL().href
 const { data: recap, error } = await useFetch<MonthlyRecap>(`/api/recaps/${month}`, {
   key: `monthly-recap-${month}`,
 })
@@ -21,6 +22,13 @@ const data = recap.value
 const totalCompleted = data.metrics.mergedPullRequests + data.metrics.closedIssues
 const maxDay = Math.max(1, ...data.days.map(day => day.opened + day.completed))
 const bars = data.days.map(day => Math.round(((day.opened + day.completed) / maxDay) * 100))
+const shareData = {
+  text: `${data.user.name}'s ${data.label} GitHub recap`,
+  title: `${data.user.name}'s GitHub monthly recap`,
+  url: shareUrl,
+}
+const { isSupported: canShare, share: shareNative } = useShare(shareData)
+const { copy: copyShareUrl } = useClipboard({ source: shareUrl, legacy: true })
 
 useSeoMeta({
   title: `${data.user.name}'s ${data.label} GitHub recap`,
@@ -43,20 +51,15 @@ defineOgImage('MonthlyRecap', {
 })
 
 async function share() {
-  const shareData = {
-    text: `${data.user.name}'s ${data.label} GitHub recap`,
-    title: `${data.user.name}'s GitHub monthly recap`,
-    url: window.location.href,
-  }
   try {
-    if (navigator.share) await navigator.share(shareData)
+    if (canShare.value) await shareNative()
     else {
-      await navigator.clipboard.writeText(shareData.url)
+      await copyShareUrl()
       toast.add({ title: 'Recap link copied' })
     }
   }
   catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') return
+    if (error instanceof Error && error.name === 'AbortError') return
     toast.add({ title: 'Could not share the recap', color: 'error' })
   }
 }
