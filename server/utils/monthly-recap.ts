@@ -1,16 +1,3 @@
-type RecapEvent = {
-  at: string
-  kind: 'completed' | 'opened'
-  repo: string
-}
-
-type BuildMonthlyRecapInput = {
-  events: RecapEvent[]
-  metrics: MonthlyRecap['metrics']
-  month: string
-  user: User
-}
-
 export function previousMonth(date: Date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - 1, 1)).toISOString().slice(0, 7)
 }
@@ -27,7 +14,12 @@ export function monthRange(month: string) {
   }
 }
 
-export function buildMonthlyRecap({ events, metrics, month, user }: BuildMonthlyRecapInput): MonthlyRecap {
+export function buildMonthlyRecap({ events, metrics, month, user }: {
+  events: Array<{ at: string, kind: 'completed' | 'opened', repo: string }>
+  metrics: MonthlyRecap['metrics']
+  month: string
+  user: User
+}): MonthlyRecap {
   const { end, start } = monthRange(month)
   const days: MonthlyRecapDay[] = []
   const dayCounts = new Map<string, number>()

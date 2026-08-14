@@ -5,22 +5,17 @@ const { data: activity, error: activityError } = await useFetch('/api/activity',
 if (activityError.value) {
   const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
   const getNumber = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
-  const getString = (v: unknown): string | undefined => typeof v === 'string' ? v : undefined
 
   const err = activityError.value
-  const statusCode = isRecord(err)
-    ? (getNumber(err.statusCode)
-      ?? getNumber(err.status)
-      ?? (isRecord(err.response) ? getNumber(err.response.status) : undefined)
-      ?? 500)
-    : 500
-
-  const dataMessage = isRecord(err) && isRecord(err.data) ? getString(err.data.message) : undefined
-  const message = dataMessage ?? (err instanceof Error ? err.message : 'Failed to load contributions')
-
   throw createError({
-    statusCode,
-    message,
+    statusCode: isRecord(err)
+      ? (getNumber(err.statusCode)
+        ?? getNumber(err.status)
+        ?? (isRecord(err.response) ? getNumber(err.response.status) : undefined)
+        ?? 500)
+      : 500,
+    message: (isRecord(err) && isRecord(err.data) && typeof err.data.message === 'string' ? err.data.message : undefined)
+      ?? (err instanceof Error ? err.message : 'Failed to load contributions'),
   })
 }
 

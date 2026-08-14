@@ -7,8 +7,6 @@ export default defineNuxtConfig({
     routeRules: {
       '/': { isr: 60 * 5 },
       '/api/activity': { isr: 60 * 5 },
-      '/api/contributions': { isr: 60 * 5 },
-      '/api/issues': { isr: 60 * 5 },
       '/feed.xml': { isr: 60 * 5 },
     },
   },

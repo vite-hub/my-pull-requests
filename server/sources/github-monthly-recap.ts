@@ -3,8 +3,7 @@ import { custom, registerSource, type Source } from 'vite-hub/source'
 import { useGitHub } from '../utils/github-client'
 import { buildMonthlyRecap, monthRange } from '../utils/monthly-recap'
 
-type SearchResponse = Awaited<ReturnType<ReturnType<typeof useGitHub>['rest']['search']['issuesAndPullRequests']>>
-type SearchItem = SearchResponse['data']['items'][number]
+type SearchItem = Awaited<ReturnType<ReturnType<typeof useGitHub>['rest']['search']['issuesAndPullRequests']>>['data']['items'][number]
 
 function repositoryName(item: SearchItem) {
   return item.repository_url.split('/').slice(-2).join('/')
@@ -27,8 +26,7 @@ const githubMonthlyRecap = custom({
     return []
   },
   async getItem(month) {
-    const github = useGitHub()
-    const { data: viewer } = await github.rest.users.getAuthenticated()
+    const { data: viewer } = await useGitHub().rest.users.getAuthenticated()
     const { endDate, startDate } = monthRange(month)
     const author = `author:${viewer.login} is:public`
     const [openedPullRequests, mergedPullRequests, openedIssues, closedIssues] = await Promise.all([
@@ -37,21 +35,19 @@ const githubMonthlyRecap = custom({
       search(`type:issue ${author} created:${startDate}..${endDate}`),
       search(`type:issue ${author} is:closed closed:${startDate}..${endDate}`),
     ])
-    const events = [
-      ...openedPullRequests.items.map(item => ({ at: item.created_at, kind: 'opened' as const, repo: repositoryName(item) })),
-      ...mergedPullRequests.items.flatMap(item => item.pull_request?.merged_at
-        ? [{ at: item.pull_request.merged_at, kind: 'completed' as const, repo: repositoryName(item) }]
-        : []),
-      ...openedIssues.items.map(item => ({ at: item.created_at, kind: 'opened' as const, repo: repositoryName(item) })),
-      ...closedIssues.items.flatMap(item => item.closed_at
-        ? [{ at: item.closed_at, kind: 'completed' as const, repo: repositoryName(item) }]
-        : []),
-    ]
-
     return {
       key: month,
       data: buildMonthlyRecap({
-        events,
+        events: [
+          ...openedPullRequests.items.map(item => ({ at: item.created_at, kind: 'opened' as const, repo: repositoryName(item) })),
+          ...mergedPullRequests.items.flatMap(item => item.pull_request?.merged_at
+            ? [{ at: item.pull_request.merged_at, kind: 'completed' as const, repo: repositoryName(item) }]
+            : []),
+          ...openedIssues.items.map(item => ({ at: item.created_at, kind: 'opened' as const, repo: repositoryName(item) })),
+          ...closedIssues.items.flatMap(item => item.closed_at
+            ? [{ at: item.closed_at, kind: 'completed' as const, repo: repositoryName(item) }]
+            : []),
+        ],
         metrics: {
           closedIssues: closedIssues.total,
           mergedPullRequests: mergedPullRequests.total,

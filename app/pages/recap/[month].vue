@@ -1,19 +1,17 @@
 <script setup lang="ts">
-const route = useRoute()
 const toast = useToast()
-const month = String(route.params.month)
+const month = String(useRoute().params.month)
 const shareUrl = useRequestURL().href
 const { data: recap, error } = await useFetch<MonthlyRecap>(`/api/recaps/${month}`, {
   key: `monthly-recap-${month}`,
 })
 
 if (error.value) {
-  const dataMessage = error.value.data && typeof error.value.data === 'object' && 'message' in error.value.data
-    ? String(error.value.data.message)
-    : undefined
   throw createError({
     statusCode: error.value.statusCode ?? 500,
-    message: dataMessage ?? error.value.message,
+    message: (error.value.data && typeof error.value.data === 'object' && 'message' in error.value.data
+      ? String(error.value.data.message)
+      : undefined) ?? error.value.message,
   })
 }
 if (!recap.value) throw createError({ statusCode: 404, message: 'Monthly recap not found' })
@@ -22,12 +20,11 @@ const data = recap.value
 const totalCompleted = data.metrics.mergedPullRequests + data.metrics.closedIssues
 const maxDay = Math.max(1, ...data.days.map(day => day.opened + day.completed))
 const bars = data.days.map(day => Math.round(((day.opened + day.completed) / maxDay) * 100))
-const shareData = {
+const { isSupported: canShare, share: shareNative } = useShare({
   text: `${data.user.name}'s ${data.label} GitHub recap`,
   title: `${data.user.name}'s GitHub monthly recap`,
   url: shareUrl,
-}
-const { isSupported: canShare, share: shareNative } = useShare(shareData)
+})
 const { copy: copyShareUrl } = useClipboard({ source: shareUrl, legacy: true })
 
 useSeoMeta({
@@ -49,20 +46,6 @@ defineOgImage('MonthlyRecap', {
 }, {
   cacheKey: `monthly-recap-${data.month}-v1`,
 })
-
-async function share() {
-  try {
-    if (canShare.value) await shareNative()
-    else {
-      await copyShareUrl()
-      toast.add({ title: 'Recap link copied' })
-    }
-  }
-  catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') return
-    toast.add({ title: 'Could not share the recap', color: 'error' })
-  }
-}
 </script>
 
 <template>
@@ -168,7 +151,10 @@ async function share() {
         label="Share my recap"
         size="xl"
         color="neutral"
-        @click="share"
+        @click="(canShare ? shareNative() : copyShareUrl().then(() => toast.add({ title: 'Recap link copied' }))).catch((error) => {
+          if (error instanceof Error && error.name === 'AbortError') return
+          toast.add({ title: 'Could not share the recap', color: 'error' })
+        })"
       />
       <NuxtLink to="/" class="recap-home">Back to recent activity</NuxtLink>
     </section>

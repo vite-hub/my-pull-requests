@@ -24,26 +24,6 @@ type GitHubActivity = {
   viewer: { avatarUrl: string, login: string, name: string | null }
 }
 
-const query = `query($pullRequests: String!, $issues: String!) {
-  viewer { avatarUrl login name }
-  pullRequests: search(query: $pullRequests, type: ISSUE, first: 50) {
-    nodes {
-      ... on PullRequest {
-        createdAt isDraft mergedAt number state title url
-        repository { isPrivate nameWithOwner stargazerCount owner { __typename } }
-      }
-    }
-  }
-  issues: search(query: $issues, type: ISSUE, first: 50) {
-    nodes {
-      ... on Issue {
-        createdAt number state title url
-        repository { isPrivate nameWithOwner stargazerCount owner { __typename } }
-      }
-    }
-  }
-}`
-
 export function githubStatus(error: unknown) {
   if (!error || typeof error !== 'object') return
   const response = 'response' in error && error.response && typeof error.response === 'object' ? error.response : undefined
@@ -69,58 +49,40 @@ export function mapGitHubActivity(data: GitHubActivity) {
     name: data.viewer.name ?? data.viewer.login,
     username: data.viewer.login,
   }
-  const prs = data.pullRequests.nodes.flatMap((pr): PullRequest[] => {
-    if (!pr || pr.repository.isPrivate || (pr.state === 'CLOSED' && !pr.mergedAt)) return []
-    const state: PullRequest['state'] = pr.mergedAt || pr.state === 'MERGED' ? 'merged' : pr.isDraft ? 'draft' : 'open'
-    return [{
-      created_at: pr.createdAt,
-      number: pr.number,
-      repo: pr.repository.nameWithOwner,
-      stars: pr.repository.stargazerCount,
-      state,
-      title: pr.title,
-      type: pr.repository.owner.__typename,
-      url: pr.url,
-    }]
-  })
-  const issues = data.issues.nodes.flatMap((issue): Issue[] => {
-    if (!issue || issue.repository.isPrivate) return []
-    return [{
-      created_at: issue.createdAt,
-      number: issue.number,
-      repo: issue.repository.nameWithOwner,
-      stars: issue.repository.stargazerCount,
-      state: issue.state === 'OPEN' ? 'open' : 'closed',
-      title: issue.title,
-      type: issue.repository.owner.__typename,
-      url: issue.url,
-    }]
-  })
 
   return {
-    contributions: { prs, user },
-    issues: { issues, user },
-  }
-}
-
-type Activity = ReturnType<typeof mapGitHubActivity>
-
-async function fetchActivity() {
-  try {
-    const { useGitHub } = await import('./github-client.ts')
-    const data = await useGitHub().graphql<GitHubActivity>(query, {
-      issues: 'type:issue author:@me is:public',
-      pullRequests: 'type:pr author:@me is:public',
-    })
-    return mapGitHubActivity(data)
-  }
-  catch (error) {
-    const status = githubStatus(error)
-    if (status === 401) throw createError({ statusCode: 401, message: 'GitHub token invalid/expired' })
-    if (status === 429) throw createError({ statusCode: 429, message: 'GitHub rate limit exceeded' })
-    if (status === 403) throw createError({ statusCode: 403, message: 'GitHub API forbidden' })
-    if (status) throw createError({ statusCode: 502, message: 'Failed to fetch GitHub activity' })
-    throw error
+    contributions: {
+      prs: data.pullRequests.nodes.flatMap((pr): PullRequest[] => {
+        if (!pr || pr.repository.isPrivate || (pr.state === 'CLOSED' && !pr.mergedAt)) return []
+        return [{
+          created_at: pr.createdAt,
+          number: pr.number,
+          repo: pr.repository.nameWithOwner,
+          stars: pr.repository.stargazerCount,
+          state: pr.mergedAt || pr.state === 'MERGED' ? 'merged' : pr.isDraft ? 'draft' : 'open',
+          title: pr.title,
+          type: pr.repository.owner.__typename,
+          url: pr.url,
+        }]
+      }),
+      user,
+    },
+    issues: {
+      issues: data.issues.nodes.flatMap((issue): Issue[] => {
+        if (!issue || issue.repository.isPrivate) return []
+        return [{
+          created_at: issue.createdAt,
+          number: issue.number,
+          repo: issue.repository.nameWithOwner,
+          stars: issue.repository.stargazerCount,
+          state: issue.state === 'OPEN' ? 'open' : 'closed',
+          title: issue.title,
+          type: issue.repository.owner.__typename,
+          url: issue.url,
+        }]
+      }),
+      user,
+    },
   }
 }
 
@@ -130,9 +92,43 @@ const githubActivity = custom({
     return ['activity']
   },
   async getItem(key) {
-    return { key, data: await fetchActivity() }
+    try {
+      return {
+        key,
+        data: mapGitHubActivity(await (await import('./github-client.ts')).useGitHub().graphql<GitHubActivity>(`query($pullRequests: String!, $issues: String!) {
+          viewer { avatarUrl login name }
+          pullRequests: search(query: $pullRequests, type: ISSUE, first: 50) {
+            nodes {
+              ... on PullRequest {
+                createdAt isDraft mergedAt number state title url
+                repository { isPrivate nameWithOwner stargazerCount owner { __typename } }
+              }
+            }
+          }
+          issues: search(query: $issues, type: ISSUE, first: 50) {
+            nodes {
+              ... on Issue {
+                createdAt number state title url
+                repository { isPrivate nameWithOwner stargazerCount owner { __typename } }
+              }
+            }
+          }
+        }`, {
+          issues: 'type:issue author:@me is:public',
+          pullRequests: 'type:pr author:@me is:public',
+        })),
+      }
+    }
+    catch (error) {
+      const status = githubStatus(error)
+      if (status === 401) throw createError({ statusCode: 401, message: 'GitHub token invalid/expired' })
+      if (status === 429) throw createError({ statusCode: 429, message: 'GitHub rate limit exceeded' })
+      if (status === 403) throw createError({ statusCode: 403, message: 'GitHub API forbidden' })
+      if (status) throw createError({ statusCode: 502, message: 'Failed to fetch GitHub activity' })
+      throw error
+    }
   },
-} satisfies Source<'activity', Activity>)
+} satisfies Source<'activity', ReturnType<typeof mapGitHubActivity>>)
 
 declare global {
   interface ViteHubSourceMap {
@@ -142,7 +138,7 @@ declare global {
 
 registerSource('githubActivity', githubActivity)
 
-const getActivity = defineCachedFunction(async (_event: H3Event) => {
+export const readGitHubActivity = defineCachedFunction(async (_event: H3Event) => {
   const item = await useSource('githubActivity').get('activity')
   if (!item.data) throw createError({ statusCode: 500, message: 'GitHub activity source returned no data' })
   return item.data
@@ -152,7 +148,3 @@ const getActivity = defineCachedFunction(async (_event: H3Event) => {
   name: 'github-activity',
   swr: false,
 })
-
-export function readGitHubActivity(event: H3Event) {
-  return getActivity(event)
-}

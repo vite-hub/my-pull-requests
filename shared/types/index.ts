@@ -26,16 +26,6 @@ export type Issue = {
   stars: number
 }
 
-export type Contributions = {
-  user: User
-  prs: PullRequest[]
-}
-
-export type Issues = {
-  user: User
-  issues: Issue[]
-}
-
 export type MonthlyRecapDay = {
   completed: number
   date: string

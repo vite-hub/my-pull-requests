@@ -1,6 +1,6 @@
 import { kv } from 'vite-hub/kv'
 
-export default async function storeMonthlyRecap(recap: MonthlyRecap) {
+export default async function (recap: MonthlyRecap) {
   const [error] = await kv.set('monthly-recap', recap)
   if (error) throw error
   return recap
