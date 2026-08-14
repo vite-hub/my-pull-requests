@@ -2,9 +2,7 @@
 defineProps<{
   bars: number[]
   busiestDay: string
-  busiestDayCount: number
   busiestHour: string
-  busiestHourCount: number
   busiestIndex: number
   closedIssues: number
   endDay?: number | string
@@ -15,7 +13,6 @@ defineProps<{
   openedPullRequests: number
   startDay?: number | string
   topRepository?: string
-  topRepositoryCount?: number
 }>()
 </script>
 
@@ -114,17 +111,14 @@ defineProps<{
         <div :style="{ display: 'flex', flex: '1', flexDirection: 'column' }">
           <span :style="{ color: '#6b6b65', fontSize: '12px' }">Busiest day</span>
           <span :style="{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }">{{ busiestDay }}</span>
-          <span :style="{ color: '#6b6b65', fontSize: '12px', marginTop: '2px' }">{{ busiestDayCount }}</span>
         </div>
         <div :style="{ display: 'flex', flex: '1', flexDirection: 'column' }">
           <span :style="{ color: '#6b6b65', fontSize: '12px' }">Busiest hour</span>
           <span :style="{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }">{{ busiestHour }}</span>
-          <span :style="{ color: '#6b6b65', fontSize: '12px', marginTop: '2px' }">{{ busiestHourCount }}</span>
         </div>
         <div v-if="topRepository" :style="{ display: 'flex', flex: '1', flexDirection: 'column' }">
           <span :style="{ color: '#6b6b65', fontSize: '12px' }">Top repository</span>
           <span :style="{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }">{{ topRepository }}</span>
-          <span :style="{ color: '#6b6b65', fontSize: '12px', marginTop: '2px' }">{{ topRepositoryCount }}</span>
         </div>
       </div>
     </div>

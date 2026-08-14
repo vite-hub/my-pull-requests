@@ -39,9 +39,7 @@ useSeoMeta({
 defineOgImage('MonthlyRecap', {
   bars,
   busiestDay: data.busiestDay.label,
-  busiestDayCount: data.busiestDay.count,
   busiestHour: data.busiestHour.label,
-  busiestHourCount: data.busiestHour.count,
   busiestIndex: data.days.findIndex(day => day.date === data.busiestDay.date),
   closedIssues: data.metrics.closedIssues,
   endDay: data.days.at(-1)?.date.slice(-2),
@@ -52,9 +50,8 @@ defineOgImage('MonthlyRecap', {
   openedPullRequests: data.metrics.openedPullRequests,
   startDay: data.days[0]?.date.slice(-2),
   topRepository: data.topRepository?.name,
-  topRepositoryCount: data.topRepository?.count,
 }, {
-  cacheKey: `monthly-recap-${data.month}-v4`,
+  cacheKey: `monthly-recap-${data.month}-v5`,
 })
 </script>
 
@@ -132,17 +129,14 @@ defineOgImage('MonthlyRecap', {
           <div>
             <dt>Busiest day</dt>
             <dd>{{ data.busiestDay.label }}</dd>
-            <p>{{ data.busiestDay.count }}</p>
           </div>
           <div>
             <dt>Busiest hour</dt>
             <dd>{{ data.busiestHour.label }}</dd>
-            <p>{{ data.busiestHour.count }}</p>
           </div>
           <div v-if="data.topRepository">
             <dt>Top repository</dt>
             <dd>{{ data.topRepository.name }}</dd>
-            <p>{{ data.topRepository.count }}</p>
           </div>
         </dl>
       </section>
@@ -256,8 +250,7 @@ defineOgImage('MonthlyRecap', {
   gap: .125rem;
 }
 
-.recap-highlight-grid dt,
-.recap-highlight-grid p {
+.recap-highlight-grid dt {
   color: #6b6b65;
   font-size: .8125rem;
 }
