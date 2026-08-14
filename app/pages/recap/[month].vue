@@ -132,17 +132,17 @@ defineOgImage('MonthlyRecap', {
           <div>
             <dt>Busiest day</dt>
             <dd>{{ data.busiestDay.label }}</dd>
-            <p>{{ data.busiestDay.count }} actions</p>
+            <p>{{ data.busiestDay.count }}</p>
           </div>
           <div>
             <dt>Busiest hour</dt>
             <dd>{{ data.busiestHour.label }}</dd>
-            <p>{{ data.busiestHour.count }} actions</p>
+            <p>{{ data.busiestHour.count }}</p>
           </div>
           <div v-if="data.topRepository">
             <dt>Top repository</dt>
             <dd>{{ data.topRepository.name }}</dd>
-            <p>{{ data.topRepository.count }} actions</p>
+            <p>{{ data.topRepository.count }}</p>
           </div>
         </dl>
       </section>
