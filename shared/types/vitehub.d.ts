@@ -12,7 +12,3 @@ declare module '#vitehub/env/server' {
 
   export function useServerEnv(event?: unknown): ServerEnv
 }
-
-declare module '#vitehub/templates' {
-  export function renderTemplate(name: 'monthly-recap', data?: Record<string, unknown>): Promise<string>
-}
