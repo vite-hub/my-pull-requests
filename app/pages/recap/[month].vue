@@ -38,6 +38,8 @@ defineOgImage('MonthlyRecap', {
   name: data.user.name,
   openedIssues: data.metrics.openedIssues,
   openedPullRequests: data.metrics.openedPullRequests,
+}, {
+  cacheKey: `monthly-recap-${data.month}-v1`,
 })
 
 async function share() {
