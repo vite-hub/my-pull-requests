@@ -1,2 +1,24 @@
+allowBuilds:
+  '@mongodb-js/zstd': false
+  '@parcel/watcher': false
+  '@swc/core': false
+  cbor-extract: false
+  esbuild: false
+  msgpackr-extract: false
+  node-liblzma: false
+  unrs-resolver: false
+  vue-demi: false
+  workerd: true
+
+blockExoticSubdeps: false
+
 ignoredBuiltDependencies:
   - '@vercel/speed-insights'
+
+minimumReleaseAgeExclude:
+  - '@nuxt/kit-nightly@5.0.0-29776765.204647f9'
+  - '@nuxt/nitro-server-nightly@5.0.0-29776765.204647f9'
+  - '@nuxt/schema-nightly@5.0.0-29776765.204647f9'
+  - '@nuxt/vite-builder-nightly@5.0.0-29776765.204647f9'
+  - nuxt-nightly@5.0.0-29776765.204647f9
+  - unrouting@0.2.3

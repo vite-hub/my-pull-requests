@@ -1,16 +1,13 @@
 <script setup lang="ts">
 const colorMode = useColorMode()
-const [{ data: contributions, error: contributionsError }, { data: issuesData }] = await Promise.all([
-  useFetch<Contributions>('/api/contributions'),
-  useFetch<Issues>('/api/issues'),
-])
+const { data: activity, error: activityError } = await useFetch('/api/activity', { key: 'github-activity' })
 
-if (contributionsError.value) {
+if (activityError.value) {
   const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
   const getNumber = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
   const getString = (v: unknown): string | undefined => typeof v === 'string' ? v : undefined
 
-  const err = contributionsError.value
+  const err = activityError.value
   const statusCode = isRecord(err)
     ? (getNumber(err.statusCode)
       ?? getNumber(err.status)
@@ -27,12 +24,12 @@ if (contributionsError.value) {
   })
 }
 
-if (!contributions.value) {
+if (!activity.value) {
   throw createError('Could not load User activity')
 }
 
-const { user, prs } = contributions.value
-const issues = issuesData.value?.issues ?? []
+const { user, prs } = activity.value.contributions
+const { issues } = activity.value.issues
 const activeTab = ref('prs')
 const userUrl = `https://github.com/${user.username}`
 
@@ -176,7 +173,8 @@ const orderedItems = computed(() => {
           { label: 'Issues', value: 'issues', icon: 'i-lucide-circle-dot' },
         ]"
         variant="link"
-        :ui="{ root: 'border-b-0' }"
+        :content="false"
+        :ui="{ list: 'border-b-0' }"
       />
       <UDropdownMenu
         :items="items"

@@ -7,4 +7,6 @@ dist
 .idea/
 .data
 .DS_Store
+.codex/
 .vercel
+.wrangler
