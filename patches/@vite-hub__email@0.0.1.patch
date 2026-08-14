@@ -1,5 +1,5 @@
 diff --git a/dist/vite.js b/dist/vite.js
-index 83568363b38e11475ea60664c02ed79b2f98bb57..bacb9b0cb597a736bab6e1caa964aa983a20e9a6 100644
+index 83568363b38e11475ea60664c02ed79b2f98bb57..76999bac1935b6c8620e315a1c4c800cb53f3b02 100644
 --- a/dist/vite.js
 +++ b/dist/vite.js
 @@ -406,6 +406,7 @@ const resolvedEmailDefinitionId = `\0${EMAIL_DEFINITION_ID}`;
@@ -83,7 +83,8 @@ index 83568363b38e11475ea60664c02ed79b2f98bb57..bacb9b0cb597a736bab6e1caa964aa98
  			try {
  				await bundleEsmEntry(entry, definition.handler, {
 -					external: cloudflare ? ["cloudflare:workers"] : void 0,
-+					external: cloudflare ? ["cloudflare:workers", ...(cloudflareEmail ? ["cloudflare:email"] : [])] : void 0,
++					external: cloudflare ? ["node:*", "cloudflare:workers", ...(cloudflareEmail ? ["cloudflare:email"] : [])] : void 0,
  					format: "esm",
  					minifyWhitespace: true,
- 					platform: "node",
+-					platform: "node",
++					platform: cloudflare ? "neutral" : "node",
