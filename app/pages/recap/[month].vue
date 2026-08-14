@@ -118,6 +118,7 @@ defineOgImage('MonthlyRecap', {
             hide-y-axis
             hide-legend
             hide-tooltip
+            style="width: 100%"
           />
         </div>
         <p class="sr-only">
