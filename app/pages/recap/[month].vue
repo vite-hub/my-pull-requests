@@ -18,7 +18,7 @@ if (!recap.value) throw createError({ statusCode: 404, message: 'Monthly recap n
 
 const data = recap.value
 const totalCompleted = data.metrics.mergedPullRequests + data.metrics.closedIssues
-const bars = data.days.map(day => Math.round(((day.opened + day.completed) / Math.max(1, ...data.days.map(day => day.opened + day.completed))) * 100))
+const bars = data.days.map(day => ((day.opened + day.completed) / Math.max(1, ...data.days.map(day => day.opened + day.completed))) * 100)
 const { isSupported: canShare, share: shareNative } = useShare({
   text: `${data.user.name}'s ${data.label} GitHub recap`,
   title: `${data.user.name}'s GitHub monthly recap`,
@@ -35,15 +35,26 @@ useSeoMeta({
 })
 
 defineOgImage('MonthlyRecap', {
+  avatar: data.user.avatar,
   bars,
+  busiestDay: data.busiestDay.label,
+  busiestDayCount: data.busiestDay.count,
+  busiestHour: data.busiestHour.label,
+  busiestHourCount: data.busiestHour.count,
+  busiestIndex: data.days.findIndex(day => day.date === data.busiestDay.date),
   closedIssues: data.metrics.closedIssues,
+  endDay: data.days.at(-1)?.date.slice(-2),
   label: data.label,
   mergedPullRequests: data.metrics.mergedPullRequests,
   name: data.user.name,
   openedIssues: data.metrics.openedIssues,
   openedPullRequests: data.metrics.openedPullRequests,
+  startDay: data.days[0]?.date.slice(-2),
+  topRepository: data.topRepository?.name,
+  topRepositoryCount: data.topRepository?.count,
+  totalCompleted,
 }, {
-  cacheKey: `monthly-recap-${data.month}-v1`,
+  cacheKey: `monthly-recap-${data.month}-v2`,
 })
 </script>
 
@@ -70,10 +81,11 @@ defineOgImage('MonthlyRecap', {
         <div class="recap-actions">
           <UButton
             icon="i-lucide-share-2"
-            label="Share recap"
+            label="Share"
             color="neutral"
-            @click="(canShare ? shareNative() : copyShareUrl().then(() => toast.add({ title: 'Recap link copied' }))).catch((error) => {
-              if (error instanceof Error && error.name === 'AbortError') return
+            variant="subtle"
+            @click="(canShare ? shareNative() : copyShareUrl().then(() => toast.add({ title: 'Recap link copied' }))).catch((shareError) => {
+              if (shareError instanceof Error && shareError.name === 'AbortError') return
               toast.add({ title: 'Could not share the recap', color: 'error' })
             })"
           />
@@ -88,63 +100,44 @@ defineOgImage('MonthlyRecap', {
         <div><dt>Issues closed</dt><dd>{{ data.metrics.closedIssues }}</dd></div>
       </dl>
 
-      <div class="recap-detail-grid">
-        <section class="recap-chart-panel" aria-labelledby="recap-chart">
-          <div class="recap-section-heading">
-            <p class="recap-kicker">
-              Daily activity
-            </p>
-            <h2 id="recap-chart">
-              {{ data.label }}, day by day.
-            </h2>
+      <section class="recap-activity" aria-labelledby="recap-activity">
+        <h2 id="recap-activity" class="recap-kicker">
+          Daily activity
+        </h2>
+        <div class="recap-chart" aria-hidden="true">
+          <div
+            v-for="(day, index) in data.days"
+            :key="day.date"
+            class="recap-bar"
+            :class="{ 'recap-bar-busiest': day.date === data.busiestDay.date }"
+            :style="{ height: bars[index] ? `${bars[index]}%` : '2px' }"
+          />
+        </div>
+        <p class="sr-only">
+          Daily activity chart. The busiest day was {{ data.busiestDay.label }} with {{ data.busiestDay.count }} actions.
+        </p>
+        <div class="recap-chart-key">
+          <span>{{ data.days[0]?.date.slice(-2) }}</span>
+          <span>{{ data.days.at(-1)?.date.slice(-2) }}</span>
+        </div>
+        <dl class="recap-highlight-grid">
+          <div>
+            <dt>Busiest day</dt>
+            <dd>{{ data.busiestDay.label }}</dd>
+            <p>{{ data.busiestDay.count }} actions</p>
           </div>
-          <div class="recap-chart" aria-hidden="true">
-            <div
-              v-for="(day, index) in data.days"
-              :key="day.date"
-              class="recap-bar"
-              :class="{ 'recap-bar-busiest': day.date === data.busiestDay.date }"
-              :style="{ height: `${Math.max(2, bars[index] ?? 0)}%` }"
-              :title="`${day.date}: ${day.opened} opened, ${day.completed} completed`"
-            />
+          <div>
+            <dt>Busiest hour</dt>
+            <dd>{{ data.busiestHour.label }}</dd>
+            <p>{{ data.busiestHour.count }} actions</p>
           </div>
-          <p class="sr-only">
-            Daily activity chart. The busiest day was {{ data.busiestDay.label }} with {{ data.busiestDay.count }} actions.
-          </p>
-          <div class="recap-chart-key">
-            <span>{{ data.days[0]?.date.slice(-2) }} {{ data.label.split(' ')[0] }}</span>
-            <span>{{ data.days.at(-1)?.date.slice(-2) }} {{ data.label.split(' ')[0] }}</span>
+          <div v-if="data.topRepository">
+            <dt>Top repository</dt>
+            <dd>{{ data.topRepository.name }}</dd>
+            <p>{{ data.topRepository.count }} actions</p>
           </div>
-        </section>
-
-        <section class="recap-highlights" aria-labelledby="recap-rhythm">
-          <div class="recap-section-heading">
-            <p class="recap-kicker">
-              Your rhythm
-            </p>
-            <h2 id="recap-rhythm">
-              When the work moved.
-            </h2>
-          </div>
-          <dl class="recap-highlight-grid">
-            <div>
-              <dt>Busiest day</dt>
-              <dd>{{ data.busiestDay.label }}</dd>
-              <p>{{ data.busiestDay.count }} actions</p>
-            </div>
-            <div>
-              <dt>Busiest hour</dt>
-              <dd>{{ data.busiestHour.label }}</dd>
-              <p>{{ data.busiestHour.count }} actions</p>
-            </div>
-            <div v-if="data.topRepository">
-              <dt>Top repository</dt>
-              <dd>{{ data.topRepository.name }}</dd>
-              <p>{{ data.topRepository.count }} actions</p>
-            </div>
-          </dl>
-        </section>
-      </div>
+        </dl>
+      </section>
     </section>
   </main>
 </template>
@@ -188,13 +181,6 @@ defineOgImage('MonthlyRecap', {
   font-weight: 650;
   letter-spacing: -.07em;
   line-height: .9;
-}
-
-.recap h2 {
-  font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-weight: 650;
-  letter-spacing: -.04em;
-  line-height: 1;
 }
 
 .recap-kicker {
@@ -252,35 +238,25 @@ defineOgImage('MonthlyRecap', {
   margin-bottom: .5rem;
 }
 
-.recap-detail-grid {
-  display: grid;
-  gap: clamp(1.25rem, 3vw, 3rem);
-  grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 1fr);
-  min-height: 0;
-}
-
-.recap-chart-panel,
-.recap-highlights {
+.recap-activity {
   border-top: 1px solid #deded9;
-  padding-top: 1rem;
-}
-
-.recap-section-heading {
   display: flex;
-  gap: 1rem;
-  justify-content: space-between;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 1rem;
 }
 
 .recap-highlight-grid {
   display: grid;
-  gap: .875rem;
-  margin-top: 1.25rem;
+  gap: clamp(1rem, 3vw, 3rem);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: .75rem;
 }
 
 .recap-highlight-grid div {
-  display: grid;
-  gap: .125rem 1rem;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
+  gap: .125rem;
 }
 
 .recap-highlight-grid dt,
@@ -289,24 +265,11 @@ defineOgImage('MonthlyRecap', {
   font-size: .8125rem;
 }
 
-.recap-highlight-grid p {
-  grid-column: 2;
-  text-align: right;
-}
-
 .recap-highlight-grid dd {
   font-size: clamp(1.125rem, 2vw, 1.5rem);
   font-weight: 600;
-  grid-column: 2;
-  grid-row: 1;
   letter-spacing: -.03em;
   overflow-wrap: anywhere;
-  text-align: right;
-}
-
-.recap-chart-panel {
-  display: flex;
-  flex-direction: column;
 }
 
 .recap-chart {
@@ -315,12 +278,12 @@ defineOgImage('MonthlyRecap', {
   flex: 1;
   gap: clamp(2px, .35vw, 5px);
   min-height: 6rem;
-  margin-top: 1.25rem;
+  margin-top: .75rem;
 }
 
 .recap-bar {
   background: #c8c8c2;
-  border-radius: 3px 3px 0 0;
+  border-radius: 1px 1px 0 0;
   flex: 1;
   min-height: 2px;
 }
@@ -346,13 +309,12 @@ defineOgImage('MonthlyRecap', {
 
 @media (max-width: 639px) {
   .recap-header,
-  .recap-section-heading {
+  .recap-actions {
     align-items: flex-start;
     flex-direction: column;
   }
 
   .recap-actions {
-    align-items: flex-start;
     flex-direction: row;
   }
 
@@ -368,7 +330,7 @@ defineOgImage('MonthlyRecap', {
     border-bottom: 1px solid #deded9;
   }
 
-  .recap-detail-grid {
+  .recap-highlight-grid {
     grid-template-columns: 1fr;
   }
 
@@ -391,9 +353,7 @@ defineOgImage('MonthlyRecap', {
     overflow: hidden;
   }
 
-  .recap-detail-grid,
-  .recap-chart-panel,
-  .recap-highlights {
+  .recap-activity {
     min-height: 0;
   }
 }
