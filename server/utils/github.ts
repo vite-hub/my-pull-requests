@@ -1,8 +1,6 @@
-import { graphql } from '@octokit/graphql'
 import { custom, registerSource, useSource, type Source } from 'vite-hub/source'
 import { createError, type H3Event } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
-import { useRuntimeConfig } from 'nitro/runtime-config'
 
 type GitHubItem = {
   createdAt: string
@@ -108,12 +106,9 @@ export function mapGitHubActivity(data: GitHubActivity) {
 type Activity = ReturnType<typeof mapGitHubActivity>
 
 async function fetchActivity() {
-  const token = useRuntimeConfig().githubToken
-  if (!token) throw createError({ statusCode: 500, message: 'Server misconfigured: set NUXT_GITHUB_TOKEN' })
-
   try {
-    const data = await graphql<GitHubActivity>(query, {
-      headers: { authorization: `bearer ${token}` },
+    const { useGitHub } = await import('./github-client.ts')
+    const data = await useGitHub().graphql<GitHubActivity>(query, {
       issues: 'type:issue author:@me is:public',
       pullRequests: 'type:pr author:@me is:public',
     })

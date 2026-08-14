@@ -1,4 +1,6 @@
 <script setup>
+const route = useRoute()
+
 useHead({
   htmlAttrs: {
     lang: 'en',
@@ -9,7 +11,7 @@ useHead({
 <template>
   <UApp>
     <NuxtPage />
-    <p class="py-6 pb-10 text-sm flex items-center justify-center gap-2 flex-wrap px-4">
+    <p v-if="!route.path.startsWith('/recap/')" class="py-6 pb-10 text-sm flex items-center justify-center gap-2 flex-wrap px-4">
       <UButton
         to="https://github.com/atinux/my-pull-requests"
         rel="noopener"

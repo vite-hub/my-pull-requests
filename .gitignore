@@ -10,3 +10,5 @@ dist
 .codex/
 .vercel
 .wrangler
+.swc
+.vitehub

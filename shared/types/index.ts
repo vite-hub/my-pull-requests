@@ -35,3 +35,25 @@ export type Issues = {
   user: User
   issues: Issue[]
 }
+
+export type MonthlyRecapDay = {
+  completed: number
+  date: string
+  opened: number
+}
+
+export type MonthlyRecap = {
+  busiestDay: { count: number, date: string, label: string }
+  busiestHour: { count: number, hour: number, label: string }
+  days: MonthlyRecapDay[]
+  label: string
+  metrics: {
+    closedIssues: number
+    mergedPullRequests: number
+    openedIssues: number
+    openedPullRequests: number
+  }
+  month: string
+  topRepository: { count: number, name: string } | null
+  user: User
+}

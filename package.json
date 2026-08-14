@@ -15,17 +15,21 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@octokit/graphql": "^9.0.4",
+    "@github-tools/sdk": "^1.11.1",
     "@iconify-json/lucide": "^1.2.68",
     "@iconify-json/simple-icons": "^1.2.52",
     "@nuxt/ui": "^4.10.0",
-    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@89ae206",
+    "@resvg/resvg-js": "^2.6.2",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@vueuse/core": "^14.4.0",
     "@vueuse/nuxt": "^14.4.0",
     "feed": "^5.1.0",
     "h3": "^2.0.1-rc.26",
+    "nuxt-og-image": "^6.7.8",
+    "satori": "^0.29.0",
     "tailwindcss": "^4.3.3",
     "ufo": "^1.6.1",
+    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@89ae206",
     "vue": "^3.5.40",
     "vue-router": "^5.2.0"
   },

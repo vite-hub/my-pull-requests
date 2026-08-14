@@ -1,5 +1,7 @@
+import { env } from 'vite-hub/env'
+
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt', 'nuxt-skill-hub'],
+  modules: ['vite-hub/nuxt', '@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt', 'nuxt-og-image', 'nuxt-skill-hub'],
 
   $production: {
     routeRules: {
@@ -13,12 +15,7 @@ export default defineNuxtConfig({
 
   devtools: false,
   css: ['~/assets/css/main.css'],
-  runtimeConfig: {
-    githubToken: '',
-  },
-
   compatibilityDate: '2026-06-30',
-  nitro: { preset: 'cloudflare-module' },
 
   eslint: {
     config: {
@@ -31,5 +28,29 @@ export default defineNuxtConfig({
   skillHub: {
     targets: ['codex'],
     generationMode: 'prepare',
+  },
+
+  vitehub: {
+    name: 'my-pull-requests',
+    preset: 'cloudflare',
+    kv: true,
+    schedule: true,
+    workflow: true,
+    email: {
+      driver: 'unemail/driver/cloudflare-email',
+    },
+    env: {
+      server: {
+        githubToken: env({
+          secret: true,
+          source: env.source(['GITHUB_TOKEN', 'NUXT_GITHUB_TOKEN']),
+        }),
+        recap: {
+          from: env({ source: env.source('RECAP_FROM') }),
+          siteUrl: env({ source: env.source('RECAP_SITE_URL') }),
+          to: env({ source: env.source('RECAP_TO') }),
+        },
+      },
+    },
   },
 })
