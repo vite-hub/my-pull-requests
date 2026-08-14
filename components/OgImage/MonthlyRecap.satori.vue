@@ -19,9 +19,9 @@ defineProps<{
 <template>
   <div
     :style="{
-      background: '#edf0ec',
+      background: '#f1f0ed',
       boxSizing: 'border-box',
-      color: '#19201b',
+      color: '#1d1c1a',
       display: 'flex',
       fontFamily: 'Inter',
       height: '100%',
@@ -31,8 +31,8 @@ defineProps<{
   >
     <div
       :style="{
-        background: '#fcfdfc',
-        border: '1px solid #d6dcd5',
+        background: '#fffefa',
+        border: '1px solid #dddcd6',
         borderRadius: '18px',
         boxSizing: 'border-box',
         display: 'flex',
@@ -46,8 +46,8 @@ defineProps<{
       <div
         :style="{
           alignItems: 'center',
-          backgroundColor: '#f1f5f1',
-          backgroundImage: 'radial-gradient(circle at 1px 1px, #d2ddd4 1px, transparent 1px)',
+          backgroundColor: '#f5f3ef',
+          backgroundImage: 'radial-gradient(circle at 1px 1px, #dfddd7 1px, transparent 1px)',
           backgroundSize: '18px 18px',
           borderRadius: '12px',
           display: 'flex',
@@ -80,12 +80,12 @@ defineProps<{
           }"
         >
           <span :style="{ fontSize: '30px', fontWeight: '700', letterSpacing: '-0.05em', lineHeight: '1' }">{{ metric[1] }}</span>
-          <span :style="{ color: '#677067', fontSize: '12px', marginTop: '4px' }">{{ metric[0] }}</span>
+          <span :style="{ color: '#6e6b65', fontSize: '12px', marginTop: '4px' }">{{ metric[0] }}</span>
         </div>
       </div>
 
       <div :style="{ display: 'flex', flexDirection: 'column' }">
-        <span :style="{ color: '#677067', fontSize: '14px', fontWeight: '700', letterSpacing: '0.12em', textTransform: 'uppercase' }">
+        <span :style="{ color: '#6e6b65', fontSize: '14px', fontWeight: '700', letterSpacing: '0.12em', textTransform: 'uppercase' }">
           Daily activity
         </span>
         <div :style="{ alignItems: 'flex-end', display: 'flex', flex: 'none', gap: '5px', height: '120px', marginTop: '8px', width: '100%' }">
@@ -93,7 +93,7 @@ defineProps<{
             v-for="(bar, index) in bars"
             :key="index"
             :style="{
-              background: index === busiestIndex ? '#2f7d46' : '#c5ccc5',
+              background: index === busiestIndex ? '#2b2a27' : '#c9c7c1',
               borderRadius: '1px 1px 0 0',
               display: 'flex',
               flex: '1',
@@ -101,7 +101,7 @@ defineProps<{
             }"
           />
         </div>
-        <div :style="{ borderTop: '1px solid #d6dcd5', color: '#677067', display: 'flex', fontSize: '12px', justifyContent: 'space-between', paddingTop: '5px' }">
+        <div :style="{ borderTop: '1px solid #dddcd6', color: '#6e6b65', display: 'flex', fontSize: '12px', justifyContent: 'space-between', paddingTop: '5px' }">
           <span>{{ startDay }}</span>
           <span>{{ endDay }}</span>
         </div>
@@ -109,15 +109,15 @@ defineProps<{
 
       <div :style="{ display: 'flex', justifyContent: 'space-between' }">
         <div :style="{ display: 'flex', flex: '1', flexDirection: 'column' }">
-          <span :style="{ color: '#677067', fontSize: '12px' }">Busiest day</span>
+          <span :style="{ color: '#6e6b65', fontSize: '12px' }">Busiest day</span>
           <span :style="{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }">{{ busiestDay }}</span>
         </div>
         <div :style="{ display: 'flex', flex: '1', flexDirection: 'column' }">
-          <span :style="{ color: '#677067', fontSize: '12px' }">Busiest hour</span>
+          <span :style="{ color: '#6e6b65', fontSize: '12px' }">Busiest hour</span>
           <span :style="{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }">{{ busiestHour }}</span>
         </div>
         <div v-if="topRepository" :style="{ display: 'flex', flex: '1', flexDirection: 'column' }">
-          <span :style="{ color: '#677067', fontSize: '12px' }">Top repository</span>
+          <span :style="{ color: '#6e6b65', fontSize: '12px' }">Top repository</span>
           <span :style="{ fontSize: '18px', fontWeight: '700', marginTop: '2px' }">{{ topRepository }}</span>
         </div>
       </div>

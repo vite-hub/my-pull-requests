@@ -51,7 +51,7 @@ defineOgImage('MonthlyRecap', {
   startDay: data.days[0]?.date.slice(-2),
   topRepository: data.topRepository?.name,
 }, {
-  cacheKey: `monthly-recap-${data.month}-v6`,
+  cacheKey: `monthly-recap-${data.month}-v7`,
 })
 </script>
 
@@ -146,15 +146,15 @@ defineOgImage('MonthlyRecap', {
 
 <style scoped>
 .recap {
-  --recap-accent: #2f7d46;
-  --recap-bar: #c5ccc5;
-  --recap-border: #d6dcd5;
-  --recap-muted: #677067;
-  --recap-pattern: #d2ddd4;
-  --recap-surface: #fcfdfc;
-  --recap-surface-subtle: #f1f5f1;
-  background: #edf0ec;
-  color: #19201b;
+  --recap-accent: #2b2a27;
+  --recap-bar: #c9c7c1;
+  --recap-border: #dddcd6;
+  --recap-muted: #6e6b65;
+  --recap-pattern: #dfddd7;
+  --recap-surface: #fffefa;
+  --recap-surface-subtle: #f5f3ef;
+  background: #f1f0ed;
+  color: #1d1c1a;
   min-height: 100svh;
   padding: clamp(.75rem, 2vw, 2rem);
 }
