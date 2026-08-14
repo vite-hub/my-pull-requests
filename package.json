@@ -29,7 +29,7 @@
     "satori": "^0.29.0",
     "tailwindcss": "^4.3.3",
     "ufo": "^1.6.1",
-    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@89ae206",
+    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@972",
     "vue": "^3.5.40",
     "vue-router": "^5.2.0"
   },
