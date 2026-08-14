@@ -162,11 +162,11 @@ defineOgImage('MonthlyRecap', {
   border: 1px solid #deded9;
   border-radius: 1.25rem;
   display: grid;
-  gap: clamp(1.25rem, 2.5vh, 2rem);
+  gap: clamp(1rem, 2vh, 1.5rem);
   margin: 0 auto;
   max-width: 80rem;
   min-height: calc(100svh - clamp(1.5rem, 4vw, 4rem));
-  padding: clamp(1.25rem, 3vw, 3rem);
+  padding: clamp(1.25rem, 2.5vw, 2.25rem);
 }
 
 .recap-header {
@@ -184,7 +184,7 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap h1 {
-  font-size: clamp(3rem, 7vw, 6rem);
+  font-size: clamp(2.75rem, 6vw, 5rem);
   font-weight: 650;
   letter-spacing: -.07em;
   line-height: .9;
@@ -232,7 +232,7 @@ defineOgImage('MonthlyRecap', {
   display: flex;
   flex-direction: column-reverse;
   min-width: 0;
-  padding: clamp(1rem, 2vw, 1.75rem);
+  padding: clamp(.75rem, 1.5vw, 1.25rem);
 }
 
 .recap-metric-grid div:last-child {
@@ -245,7 +245,7 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-metric-grid dd {
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-size: clamp(2.25rem, 4vw, 3.75rem);
   font-weight: 650;
   letter-spacing: -.07em;
   line-height: .9;
@@ -314,7 +314,7 @@ defineOgImage('MonthlyRecap', {
   display: flex;
   flex: 1;
   gap: clamp(2px, .35vw, 5px);
-  min-height: 8rem;
+  min-height: 6rem;
   margin-top: 1.25rem;
 }
 
@@ -344,7 +344,7 @@ defineOgImage('MonthlyRecap', {
   font-size: .8125rem;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 639px) {
   .recap-header,
   .recap-section-heading {
     align-items: flex-start;
@@ -375,6 +375,26 @@ defineOgImage('MonthlyRecap', {
   .recap-chart {
     height: 12rem;
     flex: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .recap {
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  .recap-card {
+    grid-template-rows: auto auto minmax(0, 1fr);
+    height: calc(100svh - clamp(1.5rem, 4vw, 4rem));
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .recap-detail-grid,
+  .recap-chart-panel,
+  .recap-highlights {
+    min-height: 0;
   }
 }
 </style>
