@@ -51,9 +51,8 @@ defineOgImage('MonthlyRecap', {
   startDay: data.days[0]?.date.slice(-2),
   topRepository: data.topRepository?.name,
   topRepositoryCount: data.topRepository?.count,
-  totalCompleted,
 }, {
-  cacheKey: `monthly-recap-${data.month}-v3`,
+  cacheKey: `monthly-recap-${data.month}-v4`,
 })
 </script>
 
@@ -62,22 +61,15 @@ defineOgImage('MonthlyRecap', {
     <section class="recap-card">
       <header class="recap-header">
         <div class="recap-intro">
-          <div class="recap-identity">
-            <UAvatar
-              :src="data.user.avatar"
-              :alt="data.user.name"
-              size="2xl"
-            />
-            <p class="recap-kicker">
-              GitHub monthly recap · {{ data.label }}
-            </p>
-          </div>
+          <UAvatar
+            :src="data.user.avatar"
+            :alt="data.user.name"
+            size="2xl"
+          />
           <h1>{{ data.user.name }} shipped.</h1>
-          <p class="recap-summary">
-            {{ totalCompleted }} issues and pull requests crossed the finish line.
-          </p>
         </div>
         <div class="recap-actions">
+          <time :datetime="data.month" class="recap-date">{{ data.label }}</time>
           <UButton
             icon="i-lucide-share-2"
             label="Share"
@@ -162,17 +154,17 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-header {
-  align-items: end;
+  align-items: center;
+  background: radial-gradient(circle at 1px 1px, #dfdfda 1px, transparent 0) 0 0 / 18px 18px, #f8f8f5;
+  border-radius: .875rem;
   display: flex;
   gap: 2rem;
   justify-content: space-between;
+  padding: clamp(1rem, 2vw, 1.5rem);
 }
 
-.recap-identity {
-  align-items: center;
-  display: flex;
-  gap: .875rem;
-  margin-bottom: 1rem;
+.recap-intro > :first-child {
+  margin-bottom: .875rem;
 }
 
 .recap h1 {
@@ -190,12 +182,6 @@ defineOgImage('MonthlyRecap', {
   text-transform: uppercase;
 }
 
-.recap-summary {
-  color: #6b6b65;
-  font-size: clamp(1rem, 1.5vw, 1.25rem);
-  margin-top: .75rem;
-}
-
 .recap-actions {
   align-items: flex-end;
   display: flex;
@@ -204,12 +190,14 @@ defineOgImage('MonthlyRecap', {
   white-space: nowrap;
 }
 
+.recap-date {
+  font-size: .875rem;
+  font-weight: 600;
+}
+
 .recap-metric-grid {
-  border: 1px solid #deded9;
-  border-radius: .875rem;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  overflow: hidden;
 }
 
 .recap-metric-grid div {
@@ -238,11 +226,9 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-activity {
-  border-top: 1px solid #deded9;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding-top: 1rem;
 }
 
 .recap-highlight-grid {

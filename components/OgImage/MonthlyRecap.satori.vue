@@ -16,7 +16,6 @@ defineProps<{
   startDay?: number | string
   topRepository?: string
   topRepositoryCount?: number
-  totalCompleted: number
 }>()
 </script>
 
@@ -47,21 +46,27 @@ defineProps<{
         width: '100%',
       }"
     >
-      <div :style="{ display: 'flex', flexDirection: 'column' }">
-        <div :style="{ alignItems: 'center', display: 'flex' }">
-          <span :style="{ color: '#6b6b65', fontSize: '15px', fontWeight: '700', letterSpacing: '0.12em', textTransform: 'uppercase' }">
-            GitHub monthly recap · {{ label }}
-          </span>
-        </div>
-        <span :style="{ fontSize: '48px', fontWeight: '700', letterSpacing: '-0.06em', lineHeight: '0.9', marginTop: '10px' }">
+      <div
+        :style="{
+          alignItems: 'center',
+          backgroundColor: '#f8f8f5',
+          backgroundImage: 'radial-gradient(circle at 1px 1px, #dfdfda 1px, transparent 1px)',
+          backgroundSize: '18px 18px',
+          borderRadius: '12px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '14px 18px',
+        }"
+      >
+        <span :style="{ fontSize: '48px', fontWeight: '700', letterSpacing: '-0.06em', lineHeight: '0.9' }">
           {{ name }} shipped.
         </span>
-        <span :style="{ color: '#6b6b65', fontSize: '17px', marginTop: '6px' }">
-          {{ totalCompleted }} issues and pull requests crossed the finish line.
+        <span :style="{ fontSize: '15px', fontWeight: '600' }">
+          {{ label }}
         </span>
       </div>
 
-      <div :style="{ border: '1px solid #deded9', borderRadius: '12px', display: 'flex', overflow: 'hidden' }">
+      <div :style="{ display: 'flex' }">
         <div
           v-for="(metric, index) in [
             ['Pull requests opened', openedPullRequests],
@@ -83,11 +88,11 @@ defineProps<{
         </div>
       </div>
 
-      <div :style="{ borderTop: '1px solid #deded9', display: 'flex', flexDirection: 'column', paddingTop: '10px' }">
+      <div :style="{ display: 'flex', flexDirection: 'column' }">
         <span :style="{ color: '#6b6b65', fontSize: '14px', fontWeight: '700', letterSpacing: '0.12em', textTransform: 'uppercase' }">
           Daily activity
         </span>
-        <div :style="{ alignItems: 'flex-end', display: 'flex', flex: 'none', gap: '5px', height: '88px', marginTop: '8px', width: '100%' }">
+        <div :style="{ alignItems: 'flex-end', display: 'flex', flex: 'none', gap: '5px', height: '120px', marginTop: '8px', width: '100%' }">
           <div
             v-for="(bar, index) in bars"
             :key="index"
