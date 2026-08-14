@@ -1,5 +1,5 @@
 import { graphql } from '@octokit/graphql'
-import { custom, registerSource, useSource, type Source } from '@vite-hub/source'
+import { custom, registerSource, useSource, type Source } from 'vite-hub/source'
 import { createError, type H3Event } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
 import { useRuntimeConfig } from 'nitro/runtime-config'

@@ -1,7 +1,11 @@
 allowBuilds:
+  '@mongodb-js/zstd': false
   '@parcel/watcher': false
+  '@swc/core': false
+  cbor-extract: false
   esbuild: false
   msgpackr-extract: false
+  node-liblzma: false
   unrs-resolver: false
   vue-demi: false
   workerd: true
@@ -18,6 +22,3 @@ minimumReleaseAgeExclude:
   - '@nuxt/vite-builder-nightly@5.0.0-29776765.204647f9'
   - nuxt-nightly@5.0.0-29776765.204647f9
   - unrouting@0.2.3
-
-patchedDependencies:
-  pkce-challenge@5.0.1: patches/pkce-challenge@5.0.1.patch
