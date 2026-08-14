@@ -51,7 +51,7 @@ defineOgImage('MonthlyRecap', {
   startDay: data.days[0]?.date.slice(-2),
   topRepository: data.topRepository?.name,
 }, {
-  cacheKey: `monthly-recap-${data.month}-v5`,
+  cacheKey: `monthly-recap-${data.month}-v6`,
 })
 </script>
 
@@ -101,8 +101,8 @@ defineOgImage('MonthlyRecap', {
               busiest: day.date === data.busiestDay.date ? day.opened + day.completed : 0,
             }))"
             :categories="{
-              activity: { name: 'Activity', color: '#c8c8c2' },
-              busiest: { name: 'Busiest day', color: '#238636' },
+              activity: { name: 'Activity', color: 'var(--recap-bar)' },
+              busiest: { name: 'Busiest day', color: 'var(--recap-accent)' },
             }"
             :y-axis="['activity', 'busiest']"
             :height="Math.max(chartHeight, 96)"
@@ -146,15 +146,22 @@ defineOgImage('MonthlyRecap', {
 
 <style scoped>
 .recap {
-  background: #f4f4f1;
-  color: #18181b;
+  --recap-accent: #2f7d46;
+  --recap-bar: #c5ccc5;
+  --recap-border: #d6dcd5;
+  --recap-muted: #677067;
+  --recap-pattern: #d2ddd4;
+  --recap-surface: #fcfdfc;
+  --recap-surface-subtle: #f1f5f1;
+  background: #edf0ec;
+  color: #19201b;
   min-height: 100svh;
   padding: clamp(.75rem, 2vw, 2rem);
 }
 
 .recap-card {
-  background: #fff;
-  border: 1px solid #deded9;
+  background: var(--recap-surface);
+  border: 1px solid var(--recap-border);
   border-radius: 1.25rem;
   display: grid;
   gap: clamp(1rem, 2vh, 1.5rem);
@@ -166,7 +173,7 @@ defineOgImage('MonthlyRecap', {
 
 .recap-header {
   align-items: center;
-  background: radial-gradient(circle at 1px 1px, #dfdfda 1px, transparent 0) 0 0 / 18px 18px, #f8f8f5;
+  background: radial-gradient(circle at 1px 1px, var(--recap-pattern) 1px, transparent 0) 0 0 / 18px 18px, var(--recap-surface-subtle);
   border-radius: .875rem;
   display: flex;
   gap: 2rem;
@@ -186,7 +193,7 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-kicker {
-  color: #6b6b65;
+  color: var(--recap-muted);
   font-size: .75rem;
   font-weight: 700;
   letter-spacing: .12em;
@@ -219,7 +226,7 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-metric-grid dt {
-  color: #6b6b65;
+  color: var(--recap-muted);
   font-size: .8125rem;
 }
 
@@ -251,7 +258,7 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-highlight-grid dt {
-  color: #6b6b65;
+  color: var(--recap-muted);
   font-size: .8125rem;
 }
 
@@ -272,8 +279,8 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-chart-key {
-  border-top: 1px solid #deded9;
-  color: #6b6b65;
+  border-top: 1px solid var(--recap-border);
+  color: var(--recap-muted);
   display: flex;
   font-size: .75rem;
   justify-content: space-between;
@@ -282,7 +289,7 @@ defineOgImage('MonthlyRecap', {
 
 .recap-home {
   border-bottom: 1px solid currentColor;
-  color: #6b6b65;
+  color: var(--recap-muted);
   font-size: .8125rem;
 }
 
@@ -302,7 +309,7 @@ defineOgImage('MonthlyRecap', {
   }
 
   .recap-metric-grid div:nth-child(-n + 2) {
-    border-bottom: 1px solid #deded9;
+    border-bottom: 1px solid var(--recap-border);
   }
 
   .recap-highlight-grid {
