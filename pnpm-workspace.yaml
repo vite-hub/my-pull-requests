@@ -30,6 +30,9 @@ overrides:
   '@vite-hub/workspace': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@970
 
 patchedDependencies:
+  '@vite-hub/email@0.0.1': patches/@vite-hub__email@0.0.1.patch
   '@vite-hub/kv@0.0.1': patches/@vite-hub__kv@0.0.1.patch
   '@vite-hub/schedule@0.0.1': patches/@vite-hub__schedule@0.0.1.patch
+  '@vite-hub/source@0.0.1': patches/@vite-hub__source@0.0.1.patch
+  '@vite-hub/workflow@0.0.1': patches/@vite-hub__workflow@0.0.1.patch
   nuxt-og-image@6.7.8: patches/nuxt-og-image@6.7.8.patch

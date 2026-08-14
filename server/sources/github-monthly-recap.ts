@@ -65,10 +65,4 @@ const githubMonthlyRecap = custom({
   },
 } satisfies Source<string, MonthlyRecap>)
 
-declare global {
-  interface ViteHubSourceMap {
-    githubMonthlyRecap: typeof githubMonthlyRecap
-  }
-}
-
-registerSource('githubMonthlyRecap', githubMonthlyRecap)
+export const useGitHubMonthlyRecap = registerSource('githubMonthlyRecap', githubMonthlyRecap)

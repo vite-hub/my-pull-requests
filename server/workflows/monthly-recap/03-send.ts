@@ -2,7 +2,7 @@ import { useServerEnv } from '#vitehub/env/server'
 import { renderEmailMarkdown } from 'vite-hub/email/markdown'
 import { email } from 'vite-hub/email/server'
 
-import renderMonthlyRecap from '../../emails/monthly-recap.template.md'
+import renderMonthlyRecap from '#vitehub/emails/monthly-recap'
 
 export default async function (recap: MonthlyRecap) {
   const { from, siteUrl, to } = useServerEnv().recap

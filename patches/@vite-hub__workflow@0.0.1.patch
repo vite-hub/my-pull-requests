@@ -1,0 +1,90 @@
+diff --git a/dist/vite.js b/dist/vite.js
+index dc6477a2c184e69299173aad51cb95f4e104b514..87340d07be0976c036e6c95b2ae5094f6df20a9b 100644
+--- a/dist/vite.js
++++ b/dist/vite.js
+@@ -307,6 +307,14 @@ const markdownTemplateRegistryId = "#vitehub/templates";
+ const markdownTemplateRegistryPath = ".vitehub/markdown-template/templates.mjs";
+ const skipMarkdownTemplateResolve = "vitehubSkipMarkdownTemplateResolve";
+ const markdownTemplateRuntimeSpecifier = "@vite-hub/markdown-template";
++const emailTemplatePrefix = "#vitehub/emails/";
++function resolveEmailTemplatePath(id, rootDir, serverDirs) {
++	const name = id.slice(emailTemplatePrefix.length);
++	const segments = name.split("/");
++	if (!name || name.includes("\\") || name.includes("?") || name.includes("#") || name.endsWith(".md") || segments.some((segment) => !segment || segment === "." || segment === "..")) throw new TypeError(`[vitehub] Invalid Email template ${JSON.stringify(id)}.`);
++	const serverDir = serverDirs?.[0] ?? resolve(resolveViteHubProjectRoot(rootDir ?? process.cwd()), "server");
++	return resolve(serverDir, "emails", `${name}.md`);
++}
+ function resolveEsbuildAliases(aliases) {
+ 	if (!aliases) return;
+ 	return Object.fromEntries(Object.entries(aliases).filter(([specifier]) => !specifier.endsWith("/")));
+@@ -388,10 +396,14 @@ async function resolveViteRawSpecifier(path, rootDir) {
+ 		return resolve(rootDir, rootRelativePath);
+ 	}
+ }
+-function createViteRawPlugin(rootDir, frameworkRuntime) {
++function createViteRawPlugin(rootDir, frameworkRuntime, serverDirs) {
+ 	return {
+ 		name: "vitehub-vite-raw",
+ 		setup(build) {
++			build.onResolve({ filter: /^#vitehub\/emails\// }, (args) => ({
++				namespace: viteMarkdownTemplateNamespace,
++				path: resolveEmailTemplatePath(args.path, rootDir, serverDirs)
++			}));
+ 			build.onResolve({
+ 				filter: /^@vite-hub\/markdown-template$/,
+ 				namespace: viteMarkdownTemplateNamespace
+@@ -526,7 +538,7 @@ async function bundleEsmEntry(entryFile, outfile, options = {}) {
+ 		minifyWhitespace: options.minifyWhitespace,
+ 		outfile,
+ 		platform,
+-		plugins: [...options.plugins ?? [], createViteRawPlugin(options.rootDir, frameworkRuntime)],
++		plugins: [...options.plugins ?? [], createViteRawPlugin(options.rootDir, frameworkRuntime, options.serverDirs)],
+ 		sourcemap: false,
+ 		target: "es2022",
+ 		write: true
+@@ -2070,7 +2082,7 @@ async function writeProviderEntries(rootDir, workflow, importBases = {}, serverD
+ 		vercelServerFile: entryFiles.vercel
+ 	};
+ }
+-function createCloudflareOutput(rootDir, artifacts, providerImportAliases) {
++function createCloudflareOutput(rootDir, artifacts, providerImportAliases, serverDirs) {
+ 	const workflowConfig = artifacts.cloudflareWorkflowConfig && artifacts.cloudflareWorkflowConfig.provider === "cloudflare" ? artifacts.cloudflareWorkflowConfig : false;
+ 	const workflows = createCloudflareWorkflowBindings(workflowConfig ? artifacts.providerDefinitions : [], workflowConfig);
+ 	const wranglerConfig = {
+@@ -2084,6 +2096,7 @@ function createCloudflareOutput(rootDir, artifacts, providerImportAliases) {
+ 		bundleEntry: artifacts.cloudflareWorkerFile,
+ 		bundleOptions: {
+ 			alias: providerImportAliases,
++			serverDirs,
+ 			conditions: [
+ 				"workerd",
+ 				"worker",
+@@ -2131,11 +2144,12 @@ async function createCloudflareWorkflowCleanup(rootDir) {
+ 		wranglerConfigOwnership: { keys: ownsWrapper ? cloudflareWorkflowWranglerConfigKeys : ["workflows"] }
+ 	};
+ }
+-function createVercelOutput(rootDir, artifacts, workflowTransformPlugin, frameworkImportBase, providerImportAliases, serverFunctionName) {
++function createVercelOutput(rootDir, artifacts, workflowTransformPlugin, frameworkImportBase, providerImportAliases, serverFunctionName, serverDirs) {
+ 	return {
+ 		bundleEntry: artifacts.vercelServerFile,
+ 		bundleOptions: {
+ 			alias: providerImportAliases,
++			serverDirs,
+ 			external: [
+ 				"@cloudflare/sandbox",
+ 				...frameworkImportBase ? [] : optionalAgentRuntimeExternals,
+@@ -2169,12 +2183,12 @@ async function generateProviderOutputs(options) {
+ 	const cloudflareOutput = cloudflareWorkflowConfig && cloudflareWorkflowConfig.provider === "cloudflare" ? createCloudflareOutput(options.rootDir, artifacts, {
+ 		...options.providerImportAliases,
+ 		...options.providerRuntimeImportAliases?.cloudflare
+-	}) : void 0;
++	}, options.serverDirs) : void 0;
+ 	const workflowTransformPlugin = vercelWorkflowConfig && vercelWorkflowConfig.provider === "vercel" ? await createVercelWorkflowTransformPlugin(options.rootDir) : void 0;
+ 	const vercelOutput = vercelWorkflowConfig && vercelWorkflowConfig.provider === "vercel" ? createVercelOutput(options.rootDir, artifacts, workflowTransformPlugin, options.importBase, {
+ 		...options.providerImportAliases,
+ 		...options.providerRuntimeImportAliases?.vercel
+-	}, options.serverFunctionName) : void 0;
++	}, options.serverFunctionName, options.serverDirs) : void 0;
+ 	const writeOutputs = async () => {
+ 		await writeProviderDeploymentOutputs({
+ 			clientOutDir: options.clientOutDir,

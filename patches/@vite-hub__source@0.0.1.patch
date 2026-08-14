@@ -1,0 +1,79 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 73f23ea16b76fb5d2116914e01c41326bafc9f51..f363aeaa54d244d0fdcff576908be95a95938bad 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -6,8 +6,24 @@ declare function defineSource<const TSource extends Source>(source: TSource): TS
+ declare function defineSources<const TSources extends Record<string, Source>>(sources: TSources): TSources;
+ //#endregion
+ //#region src/core/registry.d.ts
+-declare function registerSource<const TName extends string, const TSource extends Source>(name: TName, source: TSource): TSource;
+-declare function registerSources<const TSources extends Record<string, Source>>(sources: TSources): TSources;
++type SourceKeyOf<TSource extends Source> = TSource extends Source<infer TKey, any, any> ? TKey : string;
++type SourceDataOf<TSource extends Source> = TSource extends Source<any, infer TData, any> ? TData : unknown;
++type SourceMetadataOf<TSource extends Source> = TSource extends Source<any, any, infer TMetadata> ? TMetadata : Record<string, unknown>;
++interface SourceReaderFor<TSource extends Source> {
++    keys(): Promise<SourceKeyOf<TSource>[]>;
++    get(key: SourceKeyOf<TSource>): Promise<SourceItem<SourceKeyOf<TSource>, SourceDataOf<TSource>, SourceMetadataOf<TSource>>>;
++    items(): Promise<Array<SourceItem<SourceKeyOf<TSource>, SourceDataOf<TSource>, SourceMetadataOf<TSource>>>>;
++    read<TOptions extends ReadSourceOptions | undefined = undefined>(key: SourceKeyOf<TSource>, options?: TOptions): Promise<ReadSourceResult<TOptions>>;
++    meta(key: SourceKeyOf<TSource>): Promise<SourceMetadataOf<TSource> | undefined>;
++    exists(key: SourceKeyOf<TSource>): Promise<boolean>;
++    list(prefix?: SourceKeyOf<TSource> | (string & {}) | ""): Promise<SourceListEntry<SourceKeyOf<TSource>>[]>;
++}
++type SourceAccessor<TSource extends Source> = (context?: Partial<SourceContext>) => SourceReaderFor<TSource>;
++type SourceAccessors<TSources extends Record<string, Source>> = {
++    [TName in keyof TSources]: SourceAccessor<TSources[TName]>;
++};
++declare function registerSource<const TName extends string, const TSource extends Source>(name: TName, source: TSource): SourceAccessor<TSource>;
++declare function registerSources<const TSources extends Record<string, Source>>(sources: TSources): SourceAccessors<TSources>;
+ declare function getRegisteredSource<TName extends SourceName>(name: TName): Source<SourceKey<TName>, SourceData<TName>, SourceMetadata<TName>>;
+ declare function clearSources(): void;
+ declare function useSource<TName extends SourceName>(name: TName, context?: Partial<SourceContext>): SourceReader<TName>;
+@@ -18,4 +34,4 @@ type SourceErrorCode = "SOURCE_FAILED" | "SOURCE_NOT_FOUND" | "SOURCE_PATH_INVAL
+ //#region src/sources/custom.d.ts
+ declare function custom<const TSource extends Source>(source: TSource): TSource;
+ //#endregion
+-export { type ReadSourceOptions, type ReadSourceResult, type Source, type SourceCacheOptions, type SourceContent, type SourceContext, type SourceData, type SourceErrorCode, type SourceItem, type SourceKey, type SourceListEntry, type SourceMap, type SourceMetadata, type SourceName, type SourceReader, type SourceSearchHit, type SourceSearchQuery, clearSources, custom, defineSource, defineSources, getRegisteredSource, registerSource, registerSources, useSource };
+\ No newline at end of file
++export { type ReadSourceOptions, type ReadSourceResult, type Source, type SourceAccessor, type SourceAccessors, type SourceCacheOptions, type SourceContent, type SourceContext, type SourceData, type SourceErrorCode, type SourceItem, type SourceKey, type SourceListEntry, type SourceMap, type SourceMetadata, type SourceName, type SourceReader, type SourceReaderFor, type SourceSearchHit, type SourceSearchQuery, clearSources, custom, defineSource, defineSources, getRegisteredSource, registerSource, registerSources, useSource };
+diff --git a/dist/index.js b/dist/index.js
+index d2ad9404b960b03df346fcad3ae3d01a62214517..7aff22a4cd02762501dafa747838d1fb985cddba 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -11,11 +11,13 @@ function defineSources(sources) {
+ const sourceRegistry = /* @__PURE__ */ new Map();
+ function registerSource(name, source) {
+ 	sourceRegistry.set(name, source);
+-	return source;
++	return (context) => {
++		if (getRegisteredSource(name) !== source) throw sourceError(`[vitehub] Source ${JSON.stringify(name)} registration was replaced.`);
++		return useSource(name, context);
++	};
+ }
+ function registerSources(sources) {
+-	for (const [name, source] of Object.entries(sources)) registerSource(name, source);
+-	return sources;
++	return Object.fromEntries(Object.entries(sources).map(([name, source]) => [name, registerSource(name, source)]));
+ }
+ function getRegisteredSource(name) {
+ 	const source = sourceRegistry.get(name);
+diff --git a/package.json b/package.json
+index 5b1d8252f9d1630f3ffc796eb7769cca23305cdd..46a5a262fca2f90801917d0103e19a914ab422d9 100644
+--- a/package.json
++++ b/package.json
+@@ -53,13 +53,13 @@
+     "./package.json": "./package.json"
+   },
+   "dependencies": {
+-    "@vite-hub/runtime": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@508635682c0e913367b0937eb94eb366da957471",
+-    "effect": "4.0.0-beta.99"
++    "@vite-hub/runtime": "https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@89ae206025c6c5f21a4ea88590e703786fb95ab0"
+   },
+   "devDependencies": {
+     "@modelcontextprotocol/sdk": "^1.29.0",
+     "@types/node": "^24.13.3",
+     "@types/picomatch": "^4.0.3",
++    "effect": "4.0.0-beta.99",
+     "mrmime": "^2.0.1",
+     "ocache": "^0.1.5",
+     "picomatch": "^4.0.5",

@@ -1,4 +1,4 @@
-import { custom, registerSource, useSource, type Source } from 'vite-hub/source'
+import { custom, registerSource, type Source } from 'vite-hub/source'
 import { createError, type H3Event } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
 
@@ -156,16 +156,10 @@ const githubActivity = custom({
   },
 } satisfies Source<'activity', ReturnType<typeof mapGitHubActivity>>)
 
-declare global {
-  interface ViteHubSourceMap {
-    githubActivity: typeof githubActivity
-  }
-}
-
-registerSource('githubActivity', githubActivity)
+const useGitHubActivity = registerSource('githubActivity', githubActivity)
 
 export const readGitHubActivity = defineCachedFunction(async (_event: H3Event) => {
-  const item = await useSource('githubActivity').get('activity')
+  const item = await useGitHubActivity().get('activity')
   if (!item.data) throw createError({ statusCode: 500, message: 'GitHub activity source returned no data' })
   return item.data
 }, {
