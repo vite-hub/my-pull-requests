@@ -18,8 +18,7 @@ if (!recap.value) throw createError({ statusCode: 404, message: 'Monthly recap n
 
 const data = recap.value
 const totalCompleted = data.metrics.mergedPullRequests + data.metrics.closedIssues
-const maxDay = Math.max(1, ...data.days.map(day => day.opened + day.completed))
-const bars = data.days.map(day => Math.round(((day.opened + day.completed) / maxDay) * 100))
+const bars = data.days.map(day => Math.round(((day.opened + day.completed) / Math.max(1, ...data.days.map(day => day.opened + day.completed))) * 100))
 const { isSupported: canShare, share: shareNative } = useShare({
   text: `${data.user.name}'s ${data.label} GitHub recap`,
   title: `${data.user.name}'s GitHub monthly recap`,
@@ -50,274 +49,332 @@ defineOgImage('MonthlyRecap', {
 
 <template>
   <main class="recap">
-    <section class="recap-panel recap-cover">
-      <div class="recap-kicker">
-        GitHub monthly recap · {{ data.label }}
-      </div>
-      <UAvatar
-        :src="data.user.avatar"
-        :alt="data.user.name"
-        size="3xl"
-        class="ring-4 ring-white/80 dark:ring-neutral-900/80"
-      />
-      <h1>{{ data.user.name }} shipped.</h1>
-      <p>
-        {{ totalCompleted }} issues and pull requests crossed the finish line.
-      </p>
-      <span class="recap-scroll">Scroll through the month ↓</span>
-    </section>
+    <section class="recap-card">
+      <header class="recap-header">
+        <div class="recap-intro">
+          <div class="recap-identity">
+            <UAvatar
+              :src="data.user.avatar"
+              :alt="data.user.name"
+              size="2xl"
+            />
+            <p class="recap-kicker">
+              GitHub monthly recap · {{ data.label }}
+            </p>
+          </div>
+          <h1>{{ data.user.name }} shipped.</h1>
+          <p class="recap-summary">
+            {{ totalCompleted }} issues and pull requests crossed the finish line.
+          </p>
+        </div>
+        <div class="recap-actions">
+          <UButton
+            icon="i-lucide-share-2"
+            label="Share recap"
+            color="neutral"
+            @click="(canShare ? shareNative() : copyShareUrl().then(() => toast.add({ title: 'Recap link copied' }))).catch((error) => {
+              if (error instanceof Error && error.name === 'AbortError') return
+              toast.add({ title: 'Could not share the recap', color: 'error' })
+            })"
+          />
+          <NuxtLink to="/" class="recap-home">Recent activity</NuxtLink>
+        </div>
+      </header>
 
-    <section class="recap-panel recap-numbers" aria-labelledby="recap-output">
-      <div>
-        <p class="recap-kicker">
-          Output
-        </p>
-        <h2 id="recap-output">
-          The month in four numbers.
-        </h2>
-      </div>
-      <dl class="recap-metric-grid">
+      <dl class="recap-metric-grid" aria-label="Monthly output">
         <div><dt>Pull requests opened</dt><dd>{{ data.metrics.openedPullRequests }}</dd></div>
         <div><dt>Pull requests merged</dt><dd>{{ data.metrics.mergedPullRequests }}</dd></div>
         <div><dt>Issues opened</dt><dd>{{ data.metrics.openedIssues }}</dd></div>
         <div><dt>Issues closed</dt><dd>{{ data.metrics.closedIssues }}</dd></div>
       </dl>
-    </section>
 
-    <section class="recap-panel recap-rhythm" aria-labelledby="recap-rhythm">
-      <div>
-        <p class="recap-kicker">
-          Your rhythm
-        </p>
-        <h2 id="recap-rhythm">
-          When the work moved.
-        </h2>
-      </div>
-      <dl class="recap-highlight-grid">
-        <div>
-          <dt>Busiest day</dt>
-          <dd>{{ data.busiestDay.label }}</dd>
-          <p>{{ data.busiestDay.count }} recorded actions</p>
-        </div>
-        <div>
-          <dt>Busiest hour</dt>
-          <dd>{{ data.busiestHour.label }}</dd>
-          <p>{{ data.busiestHour.count }} recorded actions</p>
-        </div>
-        <div v-if="data.topRepository">
-          <dt>Top repository</dt>
-          <dd>{{ data.topRepository.name }}</dd>
-          <p>{{ data.topRepository.count }} recorded actions</p>
-        </div>
-      </dl>
-    </section>
+      <div class="recap-detail-grid">
+        <section class="recap-chart-panel" aria-labelledby="recap-chart">
+          <div class="recap-section-heading">
+            <p class="recap-kicker">
+              Daily activity
+            </p>
+            <h2 id="recap-chart">
+              {{ data.label }}, day by day.
+            </h2>
+          </div>
+          <div class="recap-chart" aria-hidden="true">
+            <div
+              v-for="(day, index) in data.days"
+              :key="day.date"
+              class="recap-bar"
+              :class="{ 'recap-bar-busiest': day.date === data.busiestDay.date }"
+              :style="{ height: `${Math.max(2, bars[index] ?? 0)}%` }"
+              :title="`${day.date}: ${day.opened} opened, ${day.completed} completed`"
+            />
+          </div>
+          <p class="sr-only">
+            Daily activity chart. The busiest day was {{ data.busiestDay.label }} with {{ data.busiestDay.count }} actions.
+          </p>
+          <div class="recap-chart-key">
+            <span>{{ data.days[0]?.date.slice(-2) }} {{ data.label.split(' ')[0] }}</span>
+            <span>{{ data.days.at(-1)?.date.slice(-2) }} {{ data.label.split(' ')[0] }}</span>
+          </div>
+        </section>
 
-    <section class="recap-panel recap-chart-panel" aria-labelledby="recap-chart">
-      <div>
-        <p class="recap-kicker">
-          Every day counts
-        </p>
-        <h2 id="recap-chart">
-          {{ data.label }}, day by day.
-        </h2>
+        <section class="recap-highlights" aria-labelledby="recap-rhythm">
+          <div class="recap-section-heading">
+            <p class="recap-kicker">
+              Your rhythm
+            </p>
+            <h2 id="recap-rhythm">
+              When the work moved.
+            </h2>
+          </div>
+          <dl class="recap-highlight-grid">
+            <div>
+              <dt>Busiest day</dt>
+              <dd>{{ data.busiestDay.label }}</dd>
+              <p>{{ data.busiestDay.count }} actions</p>
+            </div>
+            <div>
+              <dt>Busiest hour</dt>
+              <dd>{{ data.busiestHour.label }}</dd>
+              <p>{{ data.busiestHour.count }} actions</p>
+            </div>
+            <div v-if="data.topRepository">
+              <dt>Top repository</dt>
+              <dd>{{ data.topRepository.name }}</dd>
+              <p>{{ data.topRepository.count }} actions</p>
+            </div>
+          </dl>
+        </section>
       </div>
-      <div class="recap-chart" aria-hidden="true">
-        <div
-          v-for="(day, index) in data.days"
-          :key="day.date"
-          class="recap-bar"
-          :class="{ 'recap-bar-secondary': index % 2 }"
-          :style="{ height: `${Math.max(2, bars[index] ?? 0)}%` }"
-          :title="`${day.date}: ${day.opened} opened, ${day.completed} completed`"
-        />
-      </div>
-      <p class="sr-only">
-        Daily activity chart. The busiest day was {{ data.busiestDay.label }} with {{ data.busiestDay.count }} actions.
-      </p>
-      <div class="recap-chart-key">
-        <span>{{ data.days[0]?.date.slice(-2) }} {{ data.label.split(' ')[0] }}</span>
-        <span>{{ data.days.at(-1)?.date.slice(-2) }} {{ data.label.split(' ')[0] }}</span>
-      </div>
-    </section>
-
-    <section class="recap-panel recap-share">
-      <div class="recap-kicker">
-        That was {{ data.label }}
-      </div>
-      <h2>Keep building.</h2>
-      <p>Share the graph, or keep this one for yourself.</p>
-      <UButton
-        icon="i-lucide-share-2"
-        label="Share my recap"
-        size="xl"
-        color="neutral"
-        @click="(canShare ? shareNative() : copyShareUrl().then(() => toast.add({ title: 'Recap link copied' }))).catch((error) => {
-          if (error instanceof Error && error.name === 'AbortError') return
-          toast.add({ title: 'Could not share the recap', color: 'error' })
-        })"
-      />
-      <NuxtLink to="/" class="recap-home">Back to recent activity</NuxtLink>
     </section>
   </main>
 </template>
 
 <style scoped>
 .recap {
-  background: #f4f0e8;
+  background: #f4f4f1;
   color: #18181b;
-  scroll-snap-type: y proximity;
+  min-height: 100svh;
+  padding: clamp(.75rem, 2vw, 2rem);
 }
 
-.recap-panel {
-  min-height: 90svh;
-  padding: clamp(2rem, 7vw, 7rem);
-  scroll-snap-align: start;
+.recap-card {
+  background: #fff;
+  border: 1px solid #deded9;
+  border-radius: 1.25rem;
+  display: grid;
+  gap: clamp(1.25rem, 2.5vh, 2rem);
+  margin: 0 auto;
+  max-width: 80rem;
+  min-height: calc(100svh - clamp(1.5rem, 4vw, 4rem));
+  padding: clamp(1.25rem, 3vw, 3rem);
 }
 
-.recap-panel h1,
-.recap-panel h2 {
-  font-size: clamp(3rem, 10vw, 8rem);
+.recap-header {
+  align-items: end;
+  display: flex;
+  gap: 2rem;
+  justify-content: space-between;
+}
+
+.recap-identity {
+  align-items: center;
+  display: flex;
+  gap: .875rem;
+  margin-bottom: 1rem;
+}
+
+.recap h1 {
+  font-size: clamp(3rem, 7vw, 6rem);
   font-weight: 650;
   letter-spacing: -.07em;
   line-height: .9;
-  max-width: 12ch;
 }
 
-.recap-kicker {
-  font-size: .75rem;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-}
-
-.recap-cover,
-.recap-share {
-  align-items: flex-start;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(1.5rem, 4vw, 3rem);
-  justify-content: center;
-}
-
-.recap-cover > p,
-.recap-share > p {
-  font-size: clamp(1.25rem, 2.5vw, 2rem);
-  max-width: 32ch;
-}
-
-.recap-scroll {
-  color: #71717a;
-  font-size: .875rem;
-}
-
-.recap-numbers {
-  background: #18181b;
-  color: #fafafa;
-  display: grid;
-  gap: 4rem;
-}
-
-.recap-metric-grid {
-  display: grid;
-  gap: 1px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.recap-metric-grid div {
-  background: #27272a;
-  display: flex;
-  flex-direction: column-reverse;
-  min-height: 12rem;
-  padding: clamp(1.25rem, 4vw, 3rem);
-}
-
-.recap-metric-grid dt {
-  color: #a1a1aa;
-}
-
-.recap-metric-grid dd {
-  font-size: clamp(4rem, 10vw, 8rem);
+.recap h2 {
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
   font-weight: 650;
-  letter-spacing: -.07em;
+  letter-spacing: -.04em;
   line-height: 1;
 }
 
-.recap-rhythm {
-  background: #2954d1;
-  color: #fff;
+.recap-kicker {
+  color: #6b6b65;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.recap-summary {
+  color: #6b6b65;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  margin-top: .75rem;
+}
+
+.recap-actions {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  white-space: nowrap;
+}
+
+.recap-metric-grid {
+  border: 1px solid #deded9;
+  border-radius: .875rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.recap-metric-grid div {
+  border-right: 1px solid #deded9;
+  display: flex;
+  flex-direction: column-reverse;
+  min-width: 0;
+  padding: clamp(1rem, 2vw, 1.75rem);
+}
+
+.recap-metric-grid div:last-child {
+  border-right: 0;
+}
+
+.recap-metric-grid dt {
+  color: #6b6b65;
+  font-size: .8125rem;
+}
+
+.recap-metric-grid dd {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 650;
+  letter-spacing: -.07em;
+  line-height: .9;
+  margin-bottom: .5rem;
+}
+
+.recap-detail-grid {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 3rem);
+  grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 1fr);
+  min-height: 0;
+}
+
+.recap-chart-panel,
+.recap-highlights {
+  border-top: 1px solid #deded9;
+  padding-top: 1rem;
+}
+
+.recap-section-heading {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
 }
 
 .recap-highlight-grid {
   display: grid;
-  gap: clamp(2rem, 5vw, 5rem);
-  margin-top: clamp(4rem, 10vw, 9rem);
+  gap: .875rem;
+  margin-top: 1.25rem;
 }
 
 .recap-highlight-grid div {
-  border-top: 1px solid rgb(255 255 255 / .4);
-  padding-top: 1.25rem;
+  display: grid;
+  gap: .125rem 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .recap-highlight-grid dt,
 .recap-highlight-grid p {
-  color: rgb(255 255 255 / .7);
+  color: #6b6b65;
+  font-size: .8125rem;
+}
+
+.recap-highlight-grid p {
+  grid-column: 2;
+  text-align: right;
 }
 
 .recap-highlight-grid dd {
-  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
   font-weight: 600;
-  letter-spacing: -.05em;
+  grid-column: 2;
+  grid-row: 1;
+  letter-spacing: -.03em;
   overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .recap-chart-panel {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 }
 
 .recap-chart {
   align-items: end;
   display: flex;
-  gap: clamp(2px, .5vw, 8px);
-  height: min(36vh, 22rem);
-  margin-top: 4rem;
+  flex: 1;
+  gap: clamp(2px, .35vw, 5px);
+  min-height: 8rem;
+  margin-top: 1.25rem;
 }
 
 .recap-bar {
-  background: #18181b;
-  border-radius: 4px 4px 0 0;
+  background: #c8c8c2;
+  border-radius: 3px 3px 0 0;
   flex: 1;
   min-height: 2px;
 }
 
-.recap-bar-secondary {
-  background: #2954d1;
+.recap-bar-busiest {
+  background: #238636;
 }
 
 .recap-chart-key {
-  border-top: 1px solid #a8a29e;
+  border-top: 1px solid #deded9;
+  color: #6b6b65;
   display: flex;
+  font-size: .75rem;
   justify-content: space-between;
-  padding-top: .75rem;
-}
-
-.recap-share {
-  background: #d9ff5b;
+  padding-top: .5rem;
 }
 
 .recap-home {
   border-bottom: 1px solid currentColor;
+  color: #6b6b65;
+  font-size: .8125rem;
 }
 
-@media (min-width: 768px) {
-  .recap-numbers,
-  .recap-rhythm {
-    grid-template-columns: minmax(0, 1fr) minmax(28rem, 1fr);
+@media (max-width: 767px) {
+  .recap-header,
+  .recap-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
-  .recap-highlight-grid {
-    margin-top: 0;
+  .recap-actions {
+    align-items: flex-start;
+    flex-direction: row;
+  }
+
+  .recap-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .recap-metric-grid div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .recap-metric-grid div:nth-child(-n + 2) {
+    border-bottom: 1px solid #deded9;
+  }
+
+  .recap-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recap-chart {
+    height: 12rem;
+    flex: none;
   }
 }
 </style>
