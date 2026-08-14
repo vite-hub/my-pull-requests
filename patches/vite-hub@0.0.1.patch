@@ -17,7 +17,7 @@ index 64706190739f571bd1837481f8af2eb343973d71..6a2b635c2110433b1542a69e407c2198
  type NuxtLike = {
    hook?: (name: "nitro:config", callback: (config: Record<string, unknown>) => Promise<void>) => void;
 diff --git a/dist/nuxt.js b/dist/nuxt.js
-index f9243e7d96cae4e6142177e36a754015bde05f02..bbf737041297c7f42b31247a0526c645e037bb14 100644
+index f9243e7d96cae4e6142177e36a754015bde05f02..1d72df704a29f484eabb6d9a9e7c799e3f0ee843 100644
 --- a/dist/nuxt.js
 +++ b/dist/nuxt.js
 @@ -3,6 +3,7 @@ import { join, relative, resolve } from "node:path";
@@ -28,7 +28,7 @@ index f9243e7d96cae4e6142177e36a754015bde05f02..bbf737041297c7f42b31247a0526c645
  import { mergeConfig } from "vite";
  //#region src/nuxt.ts
  const databaseRuntimeState = fileURLToPath(new URL("./_internal/database/runtime/state", import.meta.url));
-@@ -118,10 +119,21 @@ async function applyNitroConfig(plugins, nitroConfig, nuxt) {
+@@ -118,10 +119,25 @@ async function applyNitroConfig(plugins, nitroConfig, nuxt) {
  }
  const viteHubNuxtModule = async function viteHubNuxtModule(inlineOptions, nuxt) {
  	if (!nuxt) return;
@@ -48,10 +48,14 @@ index f9243e7d96cae4e6142177e36a754015bde05f02..bbf737041297c7f42b31247a0526c645
 +		...configuredOptions,
 +		env: envOptions
 +	};
++	if (options.preset === "cloudflare") {
++		nuxt.options.nitro ??= {};
++		nuxt.options.nitro.preset ??= "cloudflare-module";
++	}
  	const rootDir = nuxt.options.rootDir || process.cwd();
  	const viteRoot = resolve(rootDir, typeof nuxt.options.vite?.root === "string" ? nuxt.options.vite.root : rootDir);
  	const projectRoot = resolveViteHubProjectRoot(viteRoot);
-@@ -151,6 +163,7 @@ const viteHubNuxtModule = async function viteHubNuxtModule(inlineOptions, nuxt)
+@@ -151,6 +167,7 @@ const viteHubNuxtModule = async function viteHubNuxtModule(inlineOptions, nuxt)
  	const installedPlugins = [...plugins.map((plugin) => existingPluginsByName.get(plugin.name) || plugin), ...flattenPlugins(existing).filter((plugin) => (plugin.name.startsWith("@vite-hub/") || plugin.name.startsWith("vite-hub/")) && !plugins.some((candidate) => candidate.name === plugin.name))];
  	nuxt.options.vite ??= {};
  	const viteConfig = nuxt.options.vite;
@@ -59,7 +63,7 @@ index f9243e7d96cae4e6142177e36a754015bde05f02..bbf737041297c7f42b31247a0526c645
  	viteConfig.define = {
  		...viteConfig.define,
  		__VITEHUB_APP_BASE_URL__: JSON.stringify(nuxt.options.app?.baseURL || "/")
-@@ -159,7 +172,12 @@ const viteHubNuxtModule = async function viteHubNuxtModule(inlineOptions, nuxt)
+@@ -159,7 +176,12 @@ const viteHubNuxtModule = async function viteHubNuxtModule(inlineOptions, nuxt)
  	viteConfig[VITEHUB_NITRO_CONFIG_CONTEXT] = true;
  	if (nuxt.options.serverDir) viteConfig[VITEHUB_SERVER_DIRS] = [nuxt.options.serverDir];
  	nuxt.options.vite.plugins = [...plugins.filter((plugin) => !existingNames.has(plugin.name)), ...existing];

@@ -1,3 +1,22 @@
+diff --git a/dist/runtime/server/og-image/bindings/font-assets/cloudflare.js b/dist/runtime/server/og-image/bindings/font-assets/cloudflare.js
+index 773d591419b9a09a25d1cb54e3c6ab5ac92a10fa..17be8d5cb2f5febb12839fe7954c21047362a1e7 100644
+--- a/dist/runtime/server/og-image/bindings/font-assets/cloudflare.js
++++ b/dist/runtime/server/og-image/bindings/font-assets/cloudflare.js
+@@ -1,3 +1,4 @@
++import { env } from "cloudflare:workers";
+ import { withBase } from "ufo";
+ import { useRuntimeConfig } from "#nuxtseo/nitro";
+ import { getSiteConfig } from "#site-config/server/composables";
+@@ -14,6 +15,9 @@ export async function resolve(event, font) {
+   const fullPath = withBase(path, app.baseURL);
+   if (path && (isDataFontUrl(path) || isExternalFontUrl(path)))
+     return fetchSpecialFontUrl(path, getSiteConfig(event).url, timeout);
++  const assetResponse = await env.ASSETS?.fetch(new URL(fullPath, getSiteConfig(event).url));
++  if (assetResponse?.ok)
++    return Buffer.from(await assetResponse.arrayBuffer());
+   const ab = await fetchLocalAsset(event, fullPath, { fetchTimeout: timeout });
+   if (ab)
+     return Buffer.from(ab);
 diff --git a/dist/shared/nuxt-og-image.BMHzg1Vz.mjs b/dist/shared/nuxt-og-image.BMHzg1Vz.mjs
 index 572e3649e181e130d0136b5771281ad6b719b9da..75697366b57ce1c689a91f6a4c027dccc6552a3e 100644
 --- a/dist/shared/nuxt-og-image.BMHzg1Vz.mjs
