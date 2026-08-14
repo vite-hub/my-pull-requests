@@ -1,0 +1,75 @@
+diff --git a/dist/nuxt.js b/dist/nuxt.js
+index 39a03a6ceeff5390bde15e23ff651386e9939abe..dd3d658efcd1eb77d3e9ae91f6be27d84e2c89af 100644
+--- a/dist/nuxt.js
++++ b/dist/nuxt.js
+@@ -5,17 +5,21 @@ function isScheduleVitePlugin(value) {
+ }
+ function viteHubScheduleNuxtModule(options = {}, nuxt) {
+ 	if (!nuxt) return;
++	const resolvedOptions = options.providerOutput === void 0 || options.providerOutput === "auto" ? {
++		...options,
++		providerOutput: "nitro"
++	} : options;
+ 	nuxt.options.vite ??= {};
+ 	const plugins = Array.isArray(nuxt.options.vite.plugins) ? nuxt.options.vite.plugins : [];
+-	if (!plugins.some(isScheduleVitePlugin)) plugins.push(hubSchedule(options));
++	if (!plugins.some(isScheduleVitePlugin)) plugins.push(hubSchedule(resolvedOptions));
+ 	nuxt.options.vite.plugins = plugins;
+ 	nuxt.hook?.("nitro:config", async (nitroConfig) => {
+ 		const rootDir = nuxt.options.rootDir || process.cwd();
+ 		const nitro = await createScheduleNitroConfig({
+-			...options,
++			...resolvedOptions,
+ 			command: nuxt.options.dev ? "serve" : "build",
+ 			nitro: nitroConfig,
+-			projectRoot: options.projectRoot || rootDir,
++			projectRoot: resolvedOptions.projectRoot || rootDir,
+ 			root: nuxt.options.srcDir || rootDir
+ 		});
+ 		if (nitro) Object.assign(nitroConfig, nitro);
+diff --git a/dist/vite-Di-j31Xs.js b/dist/vite-Di-j31Xs.js
+index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..eaa8951c277d2f05dee04a7e86e88f7421168b8f 100644
+--- a/dist/vite-Di-j31Xs.js
++++ b/dist/vite-Di-j31Xs.js
+@@ -34,6 +34,14 @@ function createNoExternalMerger(packageName) {
+ function isServerEnvironment(name, config) {
+ 	return name === "ssr" || config.consumer === "server";
+ }
++function includesNitroVitePlugin(value) {
++	if (Array.isArray(value)) return value.some(includesNitroVitePlugin);
++	if (!value || typeof value !== "object") return false;
++	return "name" in value && value.name === "nitro:main";
++}
++function hasNitroConfigContext(config) {
++	return config.__vitehubNitroConfigContext === true || includesNitroVitePlugin(config.plugins);
++}
+ function shouldSkipViteProviderBuild(command, mode) {
+ 	return command === "serve" || mode === "e2e";
+ }
+@@ -1137,17 +1145,21 @@ function hubSchedule(options = {}) {
+ 		enforce: "pre",
+ 		async config(config, env) {
+ 			serverDirs = config["__vitehubServerDirs"] ?? serverDirs;
+-			const roots = resolveSchedulePluginRoots(config.root || process.cwd(), options);
++			const resolvedOptions = (options.providerOutput === void 0 || options.providerOutput === "auto") && hasNitroConfigContext(config) ? {
++				...options,
++				providerOutput: "nitro"
++			} : options;
++			const roots = resolveSchedulePluginRoots(config.root || process.cwd(), resolvedOptions);
+ 			const definitions = discoverScheduleDefinitions({
+ 				rootDir: roots.viteRoot,
+ 				serverDirs,
+ 				serverRootDir: roots.projectRoot
+ 			});
+-			emitStandaloneProviderOutput = (options.runtime === void 0 || options.providerOutput === "standalone") && shouldEmitStandaloneProviderOutput(definitions, options);
+-			standaloneProviderSource = selectStandaloneProviderSource(definitions, options);
+-			if (!shouldInstallNitroSchedulePlugin(definitions, options)) return null;
++			emitStandaloneProviderOutput = (resolvedOptions.runtime === void 0 || resolvedOptions.providerOutput === "standalone") && shouldEmitStandaloneProviderOutput(definitions, resolvedOptions);
++			standaloneProviderSource = selectStandaloneProviderSource(definitions, resolvedOptions);
++			if (!shouldInstallNitroSchedulePlugin(definitions, resolvedOptions)) return null;
+ 			const nitro = await createScheduleNitroConfig({
+-				...options,
++				...resolvedOptions,
+ 				command: env.command,
+ 				nitro: config.nitro,
+ 				root: config.root || process.cwd(),

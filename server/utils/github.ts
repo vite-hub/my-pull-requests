@@ -24,23 +24,64 @@ type GitHubActivity = {
   viewer: { avatarUrl: string, login: string, name: string | null }
 }
 
+const GITHUB_ACTIVITY_QUERY = `#graphql
+  query GitHubActivity($pullRequests: String!, $issues: String!) {
+    viewer {
+      avatarUrl
+      login
+      name
+    }
+    pullRequests: search(query: $pullRequests, type: ISSUE, first: 50) {
+      nodes {
+        ... on PullRequest {
+          createdAt
+          isDraft
+          mergedAt
+          number
+          state
+          title
+          url
+          repository {
+            isPrivate
+            nameWithOwner
+            stargazerCount
+            owner { __typename }
+          }
+        }
+      }
+    }
+    issues: search(query: $issues, type: ISSUE, first: 50) {
+      nodes {
+        ... on Issue {
+          createdAt
+          number
+          state
+          title
+          url
+          repository {
+            isPrivate
+            nameWithOwner
+            stargazerCount
+            owner { __typename }
+          }
+        }
+      }
+    }
+  }
+`
+
 export function githubStatus(error: unknown) {
   if (!error || typeof error !== 'object') return
   const response = 'response' in error && error.response && typeof error.response === 'object' ? error.response : undefined
   const headers = response && 'headers' in response && response.headers && typeof response.headers === 'object'
     ? response.headers
-    : 'headers' in error && error.headers && typeof error.headers === 'object'
-      ? error.headers
-      : undefined
-  if (headers && 'x-ratelimit-remaining' in headers && headers['x-ratelimit-remaining'] === '0') return 429
-  const status = 'status' in error
-    ? error.status
-    : response && 'status' in response
-      ? response.status
-      : headers && 'status' in headers
-        ? headers.status
-        : undefined
-  return typeof status === 'number' ? status : typeof status === 'string' ? Number(status) : undefined
+    : undefined
+  const status = 'status' in error && typeof error.status === 'number' ? error.status : undefined
+  if (status === 403 && headers) {
+    const remaining = 'x-ratelimit-remaining' in headers ? headers['x-ratelimit-remaining'] : undefined
+    if ('retry-after' in headers || remaining === '0') return 429
+  }
+  return status
 }
 
 export function mapGitHubActivity(data: GitHubActivity) {
@@ -93,30 +134,15 @@ const githubActivity = custom({
   },
   async getItem(key) {
     try {
+      const github = (await import('./github-client.ts')).useGitHub()
+      const activity = await github.graphql<GitHubActivity>(GITHUB_ACTIVITY_QUERY, {
+        issues: 'type:issue author:@me is:public sort:created-desc',
+        pullRequests: 'type:pr author:@me is:public sort:created-desc',
+      })
+
       return {
         key,
-        data: mapGitHubActivity(await (await import('./github-client.ts')).useGitHub().graphql<GitHubActivity>(`query($pullRequests: String!, $issues: String!) {
-          viewer { avatarUrl login name }
-          pullRequests: search(query: $pullRequests, type: ISSUE, first: 50) {
-            nodes {
-              ... on PullRequest {
-                createdAt isDraft mergedAt number state title url
-                repository { isPrivate nameWithOwner stargazerCount owner { __typename } }
-              }
-            }
-          }
-          issues: search(query: $issues, type: ISSUE, first: 50) {
-            nodes {
-              ... on Issue {
-                createdAt number state title url
-                repository { isPrivate nameWithOwner stargazerCount owner { __typename } }
-              }
-            }
-          }
-        }`, {
-          issues: 'type:issue author:@me is:public',
-          pullRequests: 'type:pr author:@me is:public',
-        })),
+        data: mapGitHubActivity(activity),
       }
     }
     catch (error) {

@@ -34,7 +34,9 @@ test('maps public GitHub activity and excludes private or unmerged records', () 
 })
 
 test('normalizes GitHub response statuses', () => {
-  assert.equal(githubStatus({ headers: { 'x-ratelimit-remaining': '0', 'status': '403' } }), 429)
   assert.equal(githubStatus({ response: { headers: { 'x-ratelimit-remaining': '0' } }, status: 403 }), 429)
+  assert.equal(githubStatus({ response: { headers: { 'retry-after': '60' } }, status: 403 }), 429)
   assert.equal(githubStatus({ status: 401 }), 401)
+  assert.equal(githubStatus({ response: { headers: { 'retry-after': '60' } }, status: 500 }), 500)
+  assert.equal(githubStatus({ response: { status: 401 } }), undefined)
 })

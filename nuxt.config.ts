@@ -1,19 +1,29 @@
 import { env } from 'vite-hub/env'
 
 export default defineNuxtConfig({
-  modules: ['vite-hub/nuxt', '@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt', 'nuxt-charts', 'nuxt-og-image', 'nuxt-skill-hub'],
+  modules: [
+    'vite-hub/nuxt',
+    '@nuxt/eslint',
+    '@nuxt/ui',
+    '@vueuse/nuxt',
+    'nuxt-charts',
+    'nuxt-og-image',
+    'nuxt-skill-hub',
+  ],
 
   $production: {
     routeRules: {
       '/': { isr: 60 * 5 },
       '/api/activity': { isr: 60 * 5 },
+      '/api/recaps/**': { isr: 60 * 5 },
       '/feed.xml': { isr: 60 * 5 },
+      '/recap/**': { isr: 60 * 5 },
     },
   },
 
   devtools: false,
   css: ['~/assets/css/main.css'],
-  compatibilityDate: '2026-06-30',
+  compatibilityDate: '2026-08-14',
 
   eslint: {
     config: {
@@ -32,9 +42,7 @@ export default defineNuxtConfig({
     name: 'my-pull-requests',
     preset: 'cloudflare',
     kv: true,
-    schedule: {
-      providerOutput: 'nitro',
-    },
+    schedule: true,
     workflow: true,
     email: {
       driver: 'unemail/driver/cloudflare-email',
