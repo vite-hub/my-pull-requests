@@ -1,6 +1,5 @@
 <script setup lang="ts">
 defineProps<{
-  avatar: string
   bars: number[]
   busiestDay: string
   busiestDayCount: number
@@ -50,13 +49,7 @@ defineProps<{
     >
       <div :style="{ display: 'flex', flexDirection: 'column' }">
         <div :style="{ alignItems: 'center', display: 'flex' }">
-          <img
-            :src="avatar"
-            width="42"
-            height="42"
-            :style="{ borderRadius: '21px', objectFit: 'cover' }"
-          >
-          <span :style="{ color: '#6b6b65', fontSize: '16px', fontWeight: '700', letterSpacing: '0.12em', marginLeft: '14px', textTransform: 'uppercase' }">
+          <span :style="{ color: '#6b6b65', fontSize: '16px', fontWeight: '700', letterSpacing: '0.12em', textTransform: 'uppercase' }">
             GitHub monthly recap · {{ label }}
           </span>
         </div>

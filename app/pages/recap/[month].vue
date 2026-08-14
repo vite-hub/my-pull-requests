@@ -35,7 +35,6 @@ useSeoMeta({
 })
 
 defineOgImage('MonthlyRecap', {
-  avatar: data.user.avatar,
   bars,
   busiestDay: data.busiestDay.label,
   busiestDayCount: data.busiestDay.count,
@@ -54,7 +53,7 @@ defineOgImage('MonthlyRecap', {
   topRepositoryCount: data.topRepository?.count,
   totalCompleted,
 }, {
-  cacheKey: `monthly-recap-${data.month}-v2`,
+  cacheKey: `monthly-recap-${data.month}-v3`,
 })
 </script>
 
