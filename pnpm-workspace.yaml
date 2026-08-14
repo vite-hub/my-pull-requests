@@ -4,6 +4,7 @@ allowBuilds:
   '@swc/core': false
   cbor-extract: false
   esbuild: false
+  maplibre-gl: false
   msgpackr-extract: false
   node-liblzma: false
   unrs-resolver: false

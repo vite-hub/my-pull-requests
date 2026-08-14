@@ -1,7 +1,7 @@
 import { env } from 'vite-hub/env'
 
 export default defineNuxtConfig({
-  modules: ['vite-hub/nuxt', '@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt', 'nuxt-og-image', 'nuxt-skill-hub'],
+  modules: ['vite-hub/nuxt', '@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt', 'nuxt-charts', 'nuxt-og-image', 'nuxt-skill-hub'],
 
   $production: {
     routeRules: {

@@ -19,6 +19,8 @@ if (!recap.value) throw createError({ statusCode: 404, message: 'Monthly recap n
 const data = recap.value
 const totalCompleted = data.metrics.mergedPullRequests + data.metrics.closedIssues
 const bars = data.days.map(day => ((day.opened + day.completed) / Math.max(1, ...data.days.map(day => day.opened + day.completed))) * 100)
+const chart = useTemplateRef<HTMLElement>('chart')
+const { height: chartHeight } = useElementSize(chart)
 const { isSupported: canShare, share: shareNative } = useShare({
   text: `${data.user.name}'s ${data.label} GitHub recap`,
   title: `${data.user.name}'s GitHub monthly recap`,
@@ -95,13 +97,27 @@ defineOgImage('MonthlyRecap', {
         <h2 id="recap-activity" class="recap-kicker">
           Daily activity
         </h2>
-        <div class="recap-chart" aria-hidden="true">
-          <div
-            v-for="(day, index) in data.days"
-            :key="day.date"
-            class="recap-bar"
-            :class="{ 'recap-bar-busiest': day.date === data.busiestDay.date }"
-            :style="{ height: bars[index] ? `${bars[index]}%` : '2px' }"
+        <div ref="chart" class="recap-chart" aria-hidden="true">
+          <BarChart
+            :data="data.days.map(day => ({
+              activity: day.date === data.busiestDay.date ? 0 : day.opened + day.completed,
+              busiest: day.date === data.busiestDay.date ? day.opened + day.completed : 0,
+            }))"
+            :categories="{
+              activity: { name: 'Activity', color: '#c8c8c2' },
+              busiest: { name: 'Busiest day', color: '#238636' },
+            }"
+            :y-axis="['activity', 'busiest']"
+            :height="Math.max(chartHeight, 96)"
+            :padding="{ top: 0, right: 0, bottom: 0, left: 0 }"
+            :bar-padding="0.2"
+            :radius="1"
+            :duration="0"
+            stacked
+            hide-x-axis
+            hide-y-axis
+            hide-legend
+            hide-tooltip
           />
         </div>
         <p class="sr-only">
@@ -201,15 +217,10 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-metric-grid div {
-  border-right: 1px solid #deded9;
   display: flex;
   flex-direction: column-reverse;
   min-width: 0;
   padding: clamp(.75rem, 1.5vw, 1.25rem);
-}
-
-.recap-metric-grid div:last-child {
-  border-right: 0;
 }
 
 .recap-metric-grid dt {
@@ -258,23 +269,12 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-chart {
-  align-items: end;
   display: flex;
   flex: 1;
-  gap: clamp(2px, .35vw, 5px);
-  min-height: 6rem;
   margin-top: .75rem;
-}
-
-.recap-bar {
-  background: #c8c8c2;
-  border-radius: 1px 1px 0 0;
-  flex: 1;
-  min-height: 2px;
-}
-
-.recap-bar-busiest {
-  background: #238636;
+  min-height: 6rem;
+  overflow: hidden;
+  width: 100%;
 }
 
 .recap-chart-key {
@@ -305,10 +305,6 @@ defineOgImage('MonthlyRecap', {
 
   .recap-metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .recap-metric-grid div:nth-child(2) {
-    border-right: 0;
   }
 
   .recap-metric-grid div:nth-child(-n + 2) {

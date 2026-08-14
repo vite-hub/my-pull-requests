@@ -68,7 +68,7 @@ defineProps<{
 
       <div :style="{ display: 'flex' }">
         <div
-          v-for="(metric, index) in [
+          v-for="metric in [
             ['Pull requests opened', openedPullRequests],
             ['Pull requests merged', mergedPullRequests],
             ['Issues opened', openedIssues],
@@ -76,7 +76,6 @@ defineProps<{
           ]"
           :key="metric[0]"
           :style="{
-            borderRight: index === 3 ? '0' : '1px solid #deded9',
             display: 'flex',
             flex: '1',
             flexDirection: 'column',
