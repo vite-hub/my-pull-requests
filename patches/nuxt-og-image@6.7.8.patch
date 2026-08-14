@@ -1,0 +1,55 @@
+diff --git a/dist/shared/nuxt-og-image.BMHzg1Vz.mjs b/dist/shared/nuxt-og-image.BMHzg1Vz.mjs
+index 572e3649e181e130d0136b5771281ad6b719b9da..75697366b57ce1c689a91f6a4c027dccc6552a3e 100644
+--- a/dist/shared/nuxt-og-image.BMHzg1Vz.mjs
++++ b/dist/shared/nuxt-og-image.BMHzg1Vz.mjs
+@@ -354,13 +354,13 @@ async function setupBuildHandler(config, resolve, getDetectedRenderers, getCompa
+       const serverEntry = join(_nitro.options.output.serverDir, typeof configuredEntry === "string" ? configuredEntry : "index.mjs");
+       const wasmEntries = [serverEntry];
+       if (isCloudflarePagesOrModule) {
+-        const chunkDirs = [join(dirname(serverEntry), "chunks"), join(dirname(serverEntry), "chunks/_")];
++        const chunkDirs = [join(dirname(serverEntry), "chunks"), join(dirname(serverEntry), "chunks/_"), join(dirname(serverEntry), "_libs")];
+         for (const dir of chunkDirs) {
+           if (!existsSync(dir))
+             continue;
+           const files = await readdir(dir);
+           for (const f of files) {
+-            if (f.startsWith("wasm") && f.endsWith(".mjs"))
++            if (f.endsWith(".mjs") && (dir.endsWith("_libs") || f.startsWith("wasm")))
+               wasmEntries.push(join(dir, f));
+             if (f === "index_bg.mjs")
+               wasmEntries.push(join(dir, f));
+@@ -376,6 +376,8 @@ async function setupBuildHandler(config, resolve, getDetectedRenderers, getCompa
+         if (!existsSync(entry))
+           continue;
+         let contents = await readFile(entry, "utf-8");
++        if (!contents.includes(".wasm"))
++          continue;
+         if (normalizedTarget === "vercel-edge") {
+           contents = contents.replaceAll(
+             "return Reflect.get(target, prop, receiver);\n	}\n	return Reflect.get(processModule, prop, receiver)",
+@@ -394,6 +396,7 @@ async function setupBuildHandler(config, resolve, getDetectedRenderers, getCompa
+           }
+         }
+         if (isCloudflarePreset) {
++          contents = hoistWasmImports(contents);
+           contents = patchWebAssemblyInstantiate(contents);
+         }
+         await writeFile(entry, contents, { encoding: "utf-8" });
+@@ -408,6 +411,17 @@ async function resolveFilePathSha1(path) {
+ function sha1(source) {
+   return createHash("sha1").update(source).digest("hex").slice(0, 16);
+ }
++function hoistWasmImports(code) {
++  const imports = /* @__PURE__ */ new Map();
++  code = code.replace(/(?:await )?import\("([^"]+\.wasm)"\)\.then\(\(r\) => r\.default \|\| r\)/g, (_, path) => {
++    if (!imports.has(path))
++      imports.set(path, `__ogWasm${imports.size}`);
++    return imports.get(path);
++  });
++  if (!imports.size)
++    return code;
++  return `${[...imports].map(([path, name]) => `import ${name} from "${path}";`).join("\n")}\n${code}`;
++}
+ function patchWebAssemblyInstantiate(code) {
+   const replacements = [];
+   const capturedCallStarts = /* @__PURE__ */ new Set();

@@ -26,4 +26,5 @@ minimumReleaseAgeExclude:
 patchedDependencies:
   '@vite-hub/email@0.0.1': patches/@vite-hub__email@0.0.1.patch
   '@vite-hub/kv@0.0.1': patches/@vite-hub__kv@0.0.1.patch
+  nuxt-og-image@6.7.8: patches/nuxt-og-image@6.7.8.patch
   vite-hub@0.0.1: patches/vite-hub@0.0.1.patch

@@ -7,6 +7,7 @@ settings:
 patchedDependencies:
   '@vite-hub/email@0.0.1': 618ea656da5644c765382bfaf8055480eea1fe56aff05ca39d464f466ba82d10
   '@vite-hub/kv@0.0.1': 1529d66248378d49dcc07b512cd37af5cca1b3fcd013c3169bc05f75a91c5be4
+  nuxt-og-image@6.7.8: f09fdcc9c11edd7b7c94f1eda6009946f5dcbe9f8a6b9cb284bbfe2b952c6cf6
   vite-hub@0.0.1: 46a425973c9c63561576574c8cd0a13f5b1f88cde1bcfc1a73d53ed2b65199e3
 
 importers:
@@ -45,7 +46,7 @@ importers:
         version: 2.0.1-rc.26(crossws@0.4.10(srvx@0.11.22))
       nuxt-og-image:
         specifier: ^6.7.8
-        version: 6.7.8(512f82cd5806c11367187b130c029896)
+        version: 6.7.8(patch_hash=f09fdcc9c11edd7b7c94f1eda6009946f5dcbe9f8a6b9cb284bbfe2b952c6cf6)(512f82cd5806c11367187b130c029896)
       satori:
         specifier: ^0.29.0
         version: 0.29.0
@@ -18592,7 +18593,7 @@ snapshots:
       - yaml
       - zephyr-agent
 
-  nuxt-og-image@6.7.8(512f82cd5806c11367187b130c029896):
+  nuxt-og-image@6.7.8(patch_hash=f09fdcc9c11edd7b7c94f1eda6009946f5dcbe9f8a6b9cb284bbfe2b952c6cf6)(512f82cd5806c11367187b130c029896):
     dependencies:
       '@clack/prompts': 1.7.0
       '@nuxt/kit': 4.5.2(magic-string@1.1.1)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.3)(unplugin@3.3.0(esbuild@0.28.1)(rolldown@1.2.3)(rollup@4.62.4)(vite@8.2.1))
