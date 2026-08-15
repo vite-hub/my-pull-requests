@@ -28,8 +28,7 @@
     "nuxt-og-image": "^6.7.8",
     "satori": "^0.29.0",
     "tailwindcss": "^4.3.3",
-    "ufo": "^1.6.1",
-    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@cd0121c16b0108f4acbe9491d5d484b3d9bcf9b8",
+    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@c83b880fbe1c0704f7dbc2e3c48488bcd98ee41c",
     "vue": "^3.5.40",
     "vue-router": "^5.2.0"
   },
@@ -41,6 +40,6 @@
     "nuxt-skill-hub": "0.1.1",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.9",
-    "wrangler": "^4.119.0"
+    "wrangler": "^4.123.0"
   }
 }

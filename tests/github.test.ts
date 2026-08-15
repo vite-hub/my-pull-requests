@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { githubStatus, mapGitHubActivity } from '../server/utils/github.ts'
+import { getGitHubStatus, normalizeGitHubActivity } from '../server/utils/github.ts'
 
 const publicRepo = {
   isPrivate: false,
@@ -11,7 +11,7 @@ const publicRepo = {
 }
 
 test('maps public GitHub activity and excludes private or unmerged records', () => {
-  const activity = mapGitHubActivity({
+  const activity = normalizeGitHubActivity({
     viewer: { avatarUrl: 'https://example.com/avatar.png', login: 'onmax', name: null },
     pullRequests: {
       nodes: [
@@ -34,9 +34,9 @@ test('maps public GitHub activity and excludes private or unmerged records', () 
 })
 
 test('normalizes GitHub response statuses', () => {
-  assert.equal(githubStatus({ response: { headers: { 'x-ratelimit-remaining': '0' } }, status: 403 }), 429)
-  assert.equal(githubStatus({ response: { headers: { 'retry-after': '60' } }, status: 403 }), 429)
-  assert.equal(githubStatus({ status: 401 }), 401)
-  assert.equal(githubStatus({ response: { headers: { 'retry-after': '60' } }, status: 500 }), 500)
-  assert.equal(githubStatus({ response: { status: 401 } }), undefined)
+  assert.equal(getGitHubStatus({ response: { headers: { 'x-ratelimit-remaining': '0' } }, status: 403 }), 429)
+  assert.equal(getGitHubStatus({ response: { headers: { 'retry-after': '60' } }, status: 403 }), 429)
+  assert.equal(getGitHubStatus({ status: 401 }), 401)
+  assert.equal(getGitHubStatus({ response: { headers: { 'retry-after': '60' } }, status: 500 }), 500)
+  assert.equal(getGitHubStatus({ response: { status: 401 } }), undefined)
 })

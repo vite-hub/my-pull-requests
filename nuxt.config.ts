@@ -13,9 +13,7 @@ export default defineNuxtConfig({
   $production: {
     routeRules: {
       '/': { isr: 60 * 5 },
-      '/api/activity': { isr: 60 * 5 },
       '/api/recaps/**': { isr: 60 * 5 },
-      '/feed.xml': { isr: 60 * 5 },
       '/recap/**': { isr: 60 * 5 },
     },
   },

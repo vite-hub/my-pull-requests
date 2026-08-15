@@ -7,10 +7,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Month must use YYYY-MM' })
   }
 
-  const [error, recap] = await kv.get<MonthlyRecap>('monthly-recap')
+  const [error, recap] = await kv.get<MonthlyRecap>(`monthly-recap:${month}`)
   if (error) throw error
-  if (!recap || recap.month !== month) {
-    throw createError({ statusCode: 404, message: 'This monthly recap is no longer available' })
-  }
+  if (!recap) throw createError({ statusCode: 404, message: 'Monthly recap not found' })
   return recap
 })

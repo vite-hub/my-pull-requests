@@ -3,20 +3,7 @@ const colorMode = useColorMode()
 const { data: activity, error: activityError } = await useFetch('/api/activity', { key: 'github-activity' })
 
 if (activityError.value) {
-  const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
-  const getNumber = (v: unknown): number | undefined => typeof v === 'number' ? v : undefined
-
-  const err = activityError.value
-  throw createError({
-    statusCode: isRecord(err)
-      ? (getNumber(err.statusCode)
-        ?? getNumber(err.status)
-        ?? (isRecord(err.response) ? getNumber(err.response.status) : undefined)
-        ?? 500)
-      : 500,
-    message: (isRecord(err) && isRecord(err.data) && typeof err.data.message === 'string' ? err.data.message : undefined)
-      ?? (err instanceof Error ? err.message : 'Failed to load contributions'),
-  })
+  throw createError(activityError.value)
 }
 
 if (!activity.value) {
@@ -128,7 +115,7 @@ const orderedItems = computed(() => {
       <div class="flex items-center justify-center gap-1 text-neutral-700 dark:text-neutral-300">
         <ClientOnly>
           <UButton
-            :aria-label="`${user.name}'s GitHub profile`"
+            :aria-label="`Switch to ${colorMode.value === 'dark' ? 'light' : 'dark'} mode`"
             :icon="colorMode.value === 'dark' ? 'i-lucide-moon' : 'i-lucide-sun'"
             color="neutral"
             variant="link"
@@ -189,12 +176,12 @@ const orderedItems = computed(() => {
     </div>
 
     <div class="flex flex-col gap-6 sm:gap-10">
-      <template v-if="activeTab === 'prs'">
-        <PullRequest v-for="pr of orderedItems" :key="pr.url" :data="pr as PullRequest" />
-      </template>
-      <template v-else>
-        <IssueItem v-for="issue of orderedItems" :key="issue.url" :data="issue as Issue" />
-      </template>
+      <ContributionItem
+        v-for="item of orderedItems"
+        :key="item.url"
+        :data="item"
+        :kind="activeTab === 'prs' ? 'pull-request' : 'issue'"
+      />
     </div>
   </UContainer>
 </template>

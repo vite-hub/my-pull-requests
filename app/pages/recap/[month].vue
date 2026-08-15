@@ -7,50 +7,60 @@ const { data: recap, error } = await useFetch<MonthlyRecap>(`/api/recaps/${month
 })
 
 if (error.value) {
-  throw createError({
-    statusCode: error.value.statusCode ?? 500,
-    message: (error.value.data && typeof error.value.data === 'object' && 'message' in error.value.data
-      ? String(error.value.data.message)
-      : undefined) ?? error.value.message,
-  })
+  throw createError(error.value)
 }
 if (!recap.value) throw createError({ statusCode: 404, message: 'Monthly recap not found' })
 
-const data = recap.value
-const totalCompleted = data.metrics.mergedPullRequests + data.metrics.closedIssues
-const bars = data.days.map(day => ((day.opened + day.completed) / Math.max(1, ...data.days.map(day => day.opened + day.completed))) * 100)
-const busiestIndex = data.days.findIndex(day => day.date === data.busiestDay.date)
+const recapData = recap.value
+const totalCompleted = recapData.metrics.mergedPullRequests + recapData.metrics.closedIssues
+const dailyActivity = recapData.days.map(day => day.opened + day.completed)
+const busiestDayIndex = recapData.days.findIndex(day => day.date === recapData.busiestDay.date)
+const activityBars = dailyActivity.map(count => count / Math.max(1, ...dailyActivity) * 100)
 const { isSupported: canShare, share: shareNative } = useShare({
-  text: `${data.user.name}'s ${data.label} GitHub recap`,
-  title: `${data.user.name}'s GitHub monthly recap`,
+  text: `${recapData.user.name}'s ${recapData.label} GitHub recap`,
+  title: `${recapData.user.name}'s GitHub monthly recap`,
   url: shareUrl,
 })
 const { copy: copyShareUrl } = useClipboard({ source: shareUrl, legacy: true })
 
+async function shareRecap() {
+  try {
+    if (canShare.value) await shareNative()
+    else {
+      await copyShareUrl()
+      toast.add({ title: 'Recap link copied' })
+    }
+  }
+  catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') return
+    toast.add({ title: 'Could not share the recap', color: 'error' })
+  }
+}
+
 useSeoMeta({
-  title: `${data.user.name}'s ${data.label} GitHub recap`,
-  description: `${data.user.name} opened ${data.metrics.openedPullRequests} pull requests and merged ${data.metrics.mergedPullRequests} in ${data.label}.`,
-  ogTitle: `${data.user.name}'s ${data.label} GitHub recap`,
-  ogDescription: `${totalCompleted} issues and pull requests completed in ${data.label}.`,
+  title: `${recapData.user.name}'s ${recapData.label} GitHub recap`,
+  description: `${recapData.user.name} opened ${recapData.metrics.openedPullRequests} pull requests and merged ${recapData.metrics.mergedPullRequests} in ${recapData.label}.`,
+  ogTitle: `${recapData.user.name}'s ${recapData.label} GitHub recap`,
+  ogDescription: `${totalCompleted} issues and pull requests completed in ${recapData.label}.`,
   twitterCard: 'summary_large_image',
 })
 
 defineOgImage('MonthlyRecap', {
-  bars,
-  busiestDay: data.busiestDay.label,
-  busiestHour: data.busiestHour.label,
-  busiestIndex,
-  closedIssues: data.metrics.closedIssues,
-  endDay: data.days.at(-1)?.date.slice(-2),
-  label: data.label,
-  mergedPullRequests: data.metrics.mergedPullRequests,
-  name: data.user.name,
-  openedIssues: data.metrics.openedIssues,
-  openedPullRequests: data.metrics.openedPullRequests,
-  startDay: data.days[0]?.date.slice(-2),
-  topRepository: data.topRepository?.name,
+  bars: activityBars,
+  busiestDay: recapData.busiestDay.label,
+  busiestHour: recapData.busiestHour.label,
+  busiestIndex: busiestDayIndex,
+  closedIssues: recapData.metrics.closedIssues,
+  endDay: recapData.days.at(-1)?.date.slice(-2),
+  label: recapData.label,
+  mergedPullRequests: recapData.metrics.mergedPullRequests,
+  name: recapData.user.name,
+  openedIssues: recapData.metrics.openedIssues,
+  openedPullRequests: recapData.metrics.openedPullRequests,
+  startDay: recapData.days[0]?.date.slice(-2),
+  topRepository: recapData.topRepository?.name,
 }, {
-  cacheKey: `monthly-recap-${data.month}-v7`,
+  cacheKey: `monthly-recap-${recapData.month}-v7`,
 })
 </script>
 
@@ -60,33 +70,30 @@ defineOgImage('MonthlyRecap', {
       <header class="recap-header">
         <div class="recap-intro">
           <UAvatar
-            :src="data.user.avatar"
-            :alt="data.user.name"
+            :src="recapData.user.avatar"
+            :alt="recapData.user.name"
             size="2xl"
           />
-          <h1>{{ data.user.name }} shipped.</h1>
+          <h1>{{ recapData.user.name }} shipped.</h1>
         </div>
         <div class="recap-actions">
-          <time :datetime="data.month" class="recap-date">{{ data.label }}</time>
+          <time :datetime="recapData.month" class="recap-date">{{ recapData.label }}</time>
           <UButton
             icon="i-lucide-share-2"
             label="Share"
             color="neutral"
             variant="subtle"
-            @click="(canShare ? shareNative() : copyShareUrl().then(() => toast.add({ title: 'Recap link copied' }))).catch((shareError) => {
-              if (shareError instanceof Error && shareError.name === 'AbortError') return
-              toast.add({ title: 'Could not share the recap', color: 'error' })
-            })"
+            @click="shareRecap"
           />
           <NuxtLink to="/" class="recap-home">Recent activity</NuxtLink>
         </div>
       </header>
 
       <dl class="recap-metric-grid" aria-label="Monthly output">
-        <div><dt>Pull requests opened</dt><dd>{{ data.metrics.openedPullRequests }}</dd></div>
-        <div><dt>Pull requests merged</dt><dd>{{ data.metrics.mergedPullRequests }}</dd></div>
-        <div><dt>Issues opened</dt><dd>{{ data.metrics.openedIssues }}</dd></div>
-        <div><dt>Issues closed</dt><dd>{{ data.metrics.closedIssues }}</dd></div>
+        <div><dt>Pull requests opened</dt><dd>{{ recapData.metrics.openedPullRequests }}</dd></div>
+        <div><dt>Pull requests merged</dt><dd>{{ recapData.metrics.mergedPullRequests }}</dd></div>
+        <div><dt>Issues opened</dt><dd>{{ recapData.metrics.openedIssues }}</dd></div>
+        <div><dt>Issues closed</dt><dd>{{ recapData.metrics.closedIssues }}</dd></div>
       </dl>
 
       <section class="recap-activity" aria-labelledby="recap-activity">
@@ -95,32 +102,32 @@ defineOgImage('MonthlyRecap', {
         </h2>
         <div class="recap-chart" aria-hidden="true">
           <span
-            v-for="(bar, index) in bars"
-            :key="data.days[index]!.date"
+            v-for="(bar, index) in activityBars"
+            :key="recapData.days[index]!.date"
             class="recap-chart-bar"
-            :class="{ 'recap-chart-bar--busiest': index === busiestIndex }"
+            :class="{ 'recap-chart-bar--busiest': index === busiestDayIndex }"
             :style="{ height: bar ? `${bar}%` : '2px' }"
           />
         </div>
         <p class="sr-only">
-          Daily activity chart. The busiest day was {{ data.busiestDay.label }} with {{ data.busiestDay.count }} actions.
+          Daily activity chart. The busiest day was {{ recapData.busiestDay.label }} with {{ recapData.busiestDay.count }} actions.
         </p>
         <div class="recap-chart-key">
-          <span>{{ data.days[0]?.date.slice(-2) }}</span>
-          <span>{{ data.days.at(-1)?.date.slice(-2) }}</span>
+          <span>{{ recapData.days[0]?.date.slice(-2) }}</span>
+          <span>{{ recapData.days.at(-1)?.date.slice(-2) }}</span>
         </div>
         <dl class="recap-highlight-grid">
           <div>
             <dt>Busiest day</dt>
-            <dd>{{ data.busiestDay.label }}</dd>
+            <dd>{{ recapData.busiestDay.label }}</dd>
           </div>
           <div>
             <dt>Busiest hour</dt>
-            <dd>{{ data.busiestHour.label }}</dd>
+            <dd>{{ recapData.busiestHour.label }}</dd>
           </div>
-          <div v-if="data.topRepository">
+          <div v-if="recapData.topRepository">
             <dt>Top repository</dt>
-            <dd>{{ data.topRepository.name }}</dd>
+            <dd>{{ recapData.topRepository.name }}</dd>
           </div>
         </dl>
       </section>

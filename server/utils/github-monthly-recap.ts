@@ -1,13 +1,13 @@
-import { useGitHub } from './github-client'
-import { buildMonthlyRecap, monthRange } from './monthly-recap'
+import { createGitHubClient } from './github-client'
+import { buildMonthlyRecap, getMonthRange } from './monthly-recap'
 
-type SearchItem = Awaited<ReturnType<ReturnType<typeof useGitHub>['rest']['search']['issuesAndPullRequests']>>['data']['items'][number]
+type SearchItem = Awaited<ReturnType<ReturnType<typeof createGitHubClient>['rest']['search']['issuesAndPullRequests']>>['data']['items'][number]
 
 function repositoryName(item: SearchItem) {
   return item.repository_url.split('/').slice(-2).join('/')
 }
 
-async function search(github: ReturnType<typeof useGitHub>, query: string) {
+async function search(github: ReturnType<typeof createGitHubClient>, query: string) {
   const items: SearchItem[] = []
   let total = 0
   for await (const response of github.paginate.iterator(github.rest.search.issuesAndPullRequests, { per_page: 100, q: query })) {
@@ -17,10 +17,10 @@ async function search(github: ReturnType<typeof useGitHub>, query: string) {
   return { items, total }
 }
 
-export async function getGitHubMonthlyRecap(month: string) {
-  const github = useGitHub()
+export async function fetchGitHubMonthlyRecap(month: string) {
+  const github = createGitHubClient()
   const { data: viewer } = await github.rest.users.getAuthenticated()
-  const { endDate, startDate } = monthRange(month)
+  const { endDate, startDate } = getMonthRange(month)
   const author = `author:${viewer.login} is:public`
   const [openedPullRequests, mergedPullRequests, openedIssues, closedIssues] = await Promise.all([
     search(github, `type:pr ${author} created:${startDate}..${endDate}`),

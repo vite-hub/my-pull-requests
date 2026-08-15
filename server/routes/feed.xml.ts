@@ -1,21 +1,21 @@
 import { Feed } from 'feed'
 import { appendHeader, defineEventHandler, getRequestURL } from 'h3'
-import { joinURL } from 'ufo'
 
 export default defineEventHandler(async (event) => {
   const domain = getRequestURL(event).origin
-  const { user, prs } = (await readGitHubActivity(event)).contributions
+  const { user, prs } = (await getGitHubActivity(event)).contributions
+  const favicon = new URL('/favicon.png', domain).href
   const feed = new Feed({
     title: `${user.name} is contributing...`,
     description: `Discover ${user.name}'s recent pull requests on GitHub`,
     id: domain,
     link: domain,
     language: 'en',
-    image: joinURL(domain, 'favicon.png'),
-    favicon: joinURL(domain, 'favicon.png'),
+    image: favicon,
+    favicon,
     copyright: `CC BY-NC-SA 4.0 2024 © ${user.name}`,
     feedLinks: {
-      rss: `${domain}/rss.xml`,
+      rss: `${domain}/feed.xml`,
     },
   })
 

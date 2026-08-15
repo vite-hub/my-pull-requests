@@ -1,8 +1,8 @@
-export function previousMonth(date: Date) {
+export function getPreviousMonth(date: Date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - 1, 1)).toISOString().slice(0, 7)
 }
 
-export function monthRange(month: string) {
+export function getMonthRange(month: string) {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) throw new TypeError('Month must use YYYY-MM')
   const start = new Date(`${month}-01T00:00:00.000Z`)
   const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1))
@@ -20,7 +20,7 @@ export function buildMonthlyRecap({ events, metrics, month, user }: {
   month: string
   user: User
 }): MonthlyRecap {
-  const { end, start } = monthRange(month)
+  const { end, start } = getMonthRange(month)
   const days: MonthlyRecapDay[] = []
   const hourCounts = new Map<number, number>()
   const repositories = new Map<string, number>()

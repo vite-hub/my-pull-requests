@@ -69,7 +69,7 @@ const GITHUB_ACTIVITY_QUERY = `#graphql
   }
 `
 
-export function githubStatus(error: unknown) {
+export function getGitHubStatus(error: unknown) {
   if (!error || typeof error !== 'object') return
   const response = 'response' in error && error.response && typeof error.response === 'object' ? error.response : undefined
   const headers = response && 'headers' in response && response.headers && typeof response.headers === 'object'
@@ -83,7 +83,7 @@ export function githubStatus(error: unknown) {
   return status
 }
 
-export function mapGitHubActivity(data: GitHubActivity) {
+export function normalizeGitHubActivity(data: GitHubActivity) {
   const user = {
     avatar: data.viewer.avatarUrl,
     name: data.viewer.name ?? data.viewer.login,
@@ -126,17 +126,17 @@ export function mapGitHubActivity(data: GitHubActivity) {
   }
 }
 
-export const readGitHubActivity = defineCachedFunction(async (_event: H3Event) => {
+export const getGitHubActivity = defineCachedFunction(async (_event: H3Event) => {
   try {
-    const github = (await import('./github-client.ts')).useGitHub()
+    const github = (await import('./github-client.ts')).createGitHubClient()
     const activity = await github.graphql<GitHubActivity>(GITHUB_ACTIVITY_QUERY, {
       issues: 'type:issue author:@me is:public sort:created-desc',
       pullRequests: 'type:pr author:@me is:public sort:created-desc',
     })
-    return mapGitHubActivity(activity)
+    return normalizeGitHubActivity(activity)
   }
   catch (error) {
-    const status = githubStatus(error)
+    const status = getGitHubStatus(error)
     if (status === 401) throw createError({ statusCode: 401, message: 'GitHub token invalid/expired' })
     if (status === 429) throw createError({ statusCode: 429, message: 'GitHub rate limit exceeded' })
     if (status === 403) throw createError({ statusCode: 403, message: 'GitHub API forbidden' })
