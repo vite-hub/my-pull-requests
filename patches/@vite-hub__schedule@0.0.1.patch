@@ -1,35 +1,8 @@
 diff --git a/dist/vite-Di-j31Xs.js b/dist/vite-Di-j31Xs.js
-index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..57ee4bf629343254b839dbb09a6ec927e8056b91 100644
+index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..b8ab4ef85dc0dfaa481354c041cc51d46b0c85aa 100644
 --- a/dist/vite-Di-j31Xs.js
 +++ b/dist/vite-Di-j31Xs.js
-@@ -79,6 +79,14 @@ const markdownTemplateRegistryId = "#vitehub/templates";
- const markdownTemplateRegistryPath = ".vitehub/markdown-template/templates.mjs";
- const skipMarkdownTemplateResolve = "vitehubSkipMarkdownTemplateResolve";
- const markdownTemplateRuntimeSpecifier = "@vite-hub/markdown-template";
-+const emailTemplatePrefix = "#vitehub/emails/";
-+function resolveEmailTemplate(id, rootDir) {
-+	if (!id.startsWith(emailTemplatePrefix)) return;
-+	const name = id.slice(emailTemplatePrefix.length);
-+	const segments = name.split("/");
-+	if (!name || name.includes("\\") || name.includes("?") || name.includes("#") || name.endsWith(".md") || segments.some((segment) => !segment || segment === "." || segment === "..")) throw new TypeError(`[vitehub] Invalid Email template ${JSON.stringify(id)}.`);
-+	return `/@fs/${resolve(rootDir, "server", "emails", `${name}.md`)}?markdown-template`;
-+}
- function resolveEsbuildAliases(aliases) {
- 	if (!aliases) return;
- 	return Object.fromEntries(Object.entries(aliases).filter(([specifier]) => !specifier.endsWith("/")));
-@@ -164,6 +172,11 @@ function createViteRawPlugin(rootDir, frameworkRuntime) {
- 	return {
- 		name: "vitehub-vite-raw",
- 		setup(build) {
-+			build.onResolve({ filter: /^#vitehub\/emails\// }, (args) => build.resolve(resolveEmailTemplate(args.path, rootDir), {
-+				importer: args.importer,
-+				kind: args.kind,
-+				resolveDir: args.resolveDir
-+			}));
- 			build.onResolve({
- 				filter: /^@vite-hub\/markdown-template$/,
- 				namespace: viteMarkdownTemplateNamespace
-@@ -727,6 +740,7 @@ async function writeCloudflareScheduleOutput(options) {
+@@ -727,6 +727,7 @@ async function writeCloudflareScheduleOutput(options) {
  				"browser",
  				"default"
  			],
@@ -37,7 +10,7 @@ index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..57ee4bf629343254b839dbb09a6ec927
  			format: "esm",
  			platform: "neutral",
  			plugins: [createScheduleDefinitionAliasPlugin()],
-@@ -1192,7 +1206,7 @@ function hubSchedule(options = {}) {
+@@ -1192,7 +1193,7 @@ function hubSchedule(options = {}) {
  				},
  				clientOutDir: resolved.build.outDir,
  				...!emitStandaloneProviderOutput ? { definitions: [] } : {},

@@ -45,7 +45,7 @@ export default defineNuxtConfig({
     preset: isVercel ? 'vercel' : 'cloudflare',
     kv: true,
     schedule: isVercel ? { providerOutput: 'standalone' } : true,
-    workflow: true,
+    workflow: { provider: isVercel ? 'vercel' : 'cloudflare' },
     email: isVercel
       ? {
           driver: 'unemail/driver/resend',
