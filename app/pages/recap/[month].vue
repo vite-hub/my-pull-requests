@@ -19,8 +19,7 @@ if (!recap.value) throw createError({ statusCode: 404, message: 'Monthly recap n
 const data = recap.value
 const totalCompleted = data.metrics.mergedPullRequests + data.metrics.closedIssues
 const bars = data.days.map(day => ((day.opened + day.completed) / Math.max(1, ...data.days.map(day => day.opened + day.completed))) * 100)
-const chart = useTemplateRef<HTMLElement>('chart')
-const { height: chartHeight } = useElementSize(chart)
+const busiestIndex = data.days.findIndex(day => day.date === data.busiestDay.date)
 const { isSupported: canShare, share: shareNative } = useShare({
   text: `${data.user.name}'s ${data.label} GitHub recap`,
   title: `${data.user.name}'s GitHub monthly recap`,
@@ -40,7 +39,7 @@ defineOgImage('MonthlyRecap', {
   bars,
   busiestDay: data.busiestDay.label,
   busiestHour: data.busiestHour.label,
-  busiestIndex: data.days.findIndex(day => day.date === data.busiestDay.date),
+  busiestIndex,
   closedIssues: data.metrics.closedIssues,
   endDay: data.days.at(-1)?.date.slice(-2),
   label: data.label,
@@ -94,28 +93,13 @@ defineOgImage('MonthlyRecap', {
         <h2 id="recap-activity" class="recap-kicker">
           Daily activity
         </h2>
-        <div ref="chart" class="recap-chart" aria-hidden="true">
-          <BarChart
-            :data="data.days.map(day => ({
-              activity: day.date === data.busiestDay.date ? 0 : day.opened + day.completed,
-              busiest: day.date === data.busiestDay.date ? day.opened + day.completed : 0,
-            }))"
-            :categories="{
-              activity: { name: 'Activity', color: 'var(--recap-bar)' },
-              busiest: { name: 'Busiest day', color: 'var(--recap-accent)' },
-            }"
-            :y-axis="['activity', 'busiest']"
-            :height="Math.max(chartHeight, 96)"
-            :padding="{ top: 0, right: 0, bottom: 0, left: 0 }"
-            :bar-padding="0.2"
-            :radius="1"
-            :duration="0"
-            stacked
-            hide-x-axis
-            hide-y-axis
-            hide-legend
-            hide-tooltip
-            style="width: 100%"
+        <div class="recap-chart" aria-hidden="true">
+          <span
+            v-for="(bar, index) in bars"
+            :key="data.days[index]!.date"
+            class="recap-chart-bar"
+            :class="{ 'recap-chart-bar--busiest': index === busiestIndex }"
+            :style="{ height: bar ? `${bar}%` : '2px' }"
           />
         </div>
         <p class="sr-only">
@@ -270,12 +254,25 @@ defineOgImage('MonthlyRecap', {
 }
 
 .recap-chart {
+  align-items: flex-end;
   display: flex;
   flex: 1;
+  gap: clamp(2px, .4vw, 6px);
   margin-top: .75rem;
   min-height: 6rem;
   overflow: hidden;
   width: 100%;
+}
+
+.recap-chart-bar {
+  background: var(--recap-bar);
+  border-radius: 1px 1px 0 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.recap-chart-bar--busiest {
+  background: var(--recap-accent);
 }
 
 .recap-chart-key {

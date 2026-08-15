@@ -1,4 +1,4 @@
-import { getGitHubMonthlyRecap } from '../../sources/github-monthly-recap'
+import { getGitHubMonthlyRecap } from '../../utils/github-monthly-recap'
 
 export default async function (input: { month: string }) {
   'use step'

@@ -22,7 +22,6 @@ export function buildMonthlyRecap({ events, metrics, month, user }: {
 }): MonthlyRecap {
   const { end, start } = monthRange(month)
   const days: MonthlyRecapDay[] = []
-  const dayCounts = new Map<string, number>()
   const hourCounts = new Map<number, number>()
   const repositories = new Map<string, number>()
 
@@ -38,22 +37,20 @@ export function buildMonthlyRecap({ events, metrics, month, user }: {
     const day = daysByDate.get(date)
     if (!day) continue
     day[event.kind] += 1
-    dayCounts.set(date, (dayCounts.get(date) ?? 0) + 1)
     hourCounts.set(at.getUTCHours(), (hourCounts.get(at.getUTCHours()) ?? 0) + 1)
     repositories.set(event.repo, (repositories.get(event.repo) ?? 0) + 1)
   }
 
-  const busiestDayEntry = [...dayCounts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]
+  const busiestDay = days.reduce((busiest, day) => day.opened + day.completed > busiest.opened + busiest.completed ? day : busiest)
   const busiestHourEntry = [...hourCounts].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]
   const topRepositoryEntry = [...repositories].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]
-  const busiestDate = busiestDayEntry?.[0] ?? days[0]!.date
   const busiestHour = busiestHourEntry?.[0] ?? 0
 
   return {
     busiestDay: {
-      count: busiestDayEntry?.[1] ?? 0,
-      date: busiestDate,
-      label: new Intl.DateTimeFormat('en', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${busiestDate}T00:00:00Z`)),
+      count: busiestDay.opened + busiestDay.completed,
+      date: busiestDay.date,
+      label: new Intl.DateTimeFormat('en', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${busiestDay.date}T00:00:00Z`)),
     },
     busiestHour: {
       count: busiestHourEntry?.[1] ?? 0,

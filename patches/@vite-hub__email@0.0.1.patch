@@ -1,5 +1,5 @@
 diff --git a/dist/vite.d.ts b/dist/vite.d.ts
-index 691ea1e07df844553f5dd77556f1dc7593b85b27..05a25c56acdb5851fef01e0834f1029900a07315 100644
+index 691ea1e07df844553f5dd77556f1dc7593b85b27..173d10e70024ba44ac64304bae21922f432d9897 100644
 --- a/dist/vite.d.ts
 +++ b/dist/vite.d.ts
 @@ -16,7 +16,11 @@ interface EmailVitePluginOptions {
@@ -16,7 +16,7 @@ index 691ea1e07df844553f5dd77556f1dc7593b85b27..05a25c56acdb5851fef01e0834f10299
  type EmailVitePlugin = Plugin & {
    api: EmailVitePluginAPI;
 diff --git a/dist/vite.js b/dist/vite.js
-index 542d21ba99ac7c8ac884bc4d7139baeb75155345..90f9e2be9ad30e5c3fb7d8de47c7f9102e8ef0e9 100644
+index 542d21ba99ac7c8ac884bc4d7139baeb75155345..7c37cdafde722ba8e3d4533c146a571ff2639724 100644
 --- a/dist/vite.js
 +++ b/dist/vite.js
 @@ -1,6 +1,6 @@
@@ -88,7 +88,7 @@ index 542d21ba99ac7c8ac884bc4d7139baeb75155345..90f9e2be9ad30e5c3fb7d8de47c7f910
  function hubEmail(options) {
  	if (!options || typeof options !== "object") throw new TypeError("[vitehub] Email requires an unemail/driver/* driver.");
  	const internalOptions = options;
-@@ -511,18 +564,43 @@ function hubEmail(options) {
+@@ -511,18 +564,44 @@ function hubEmail(options) {
  	const driverImport = resolveDriverImport(configured.driver);
  	const runtimeEnvImport = internalOptions.runtimeEnvImport ?? resolve(dirname(resolvePackageImport("@vite-hub/env/package.json")), "dist/server.js");
  	let cloudflare = false;
@@ -100,8 +100,10 @@ index 542d21ba99ac7c8ac884bc4d7139baeb75155345..90f9e2be9ad30e5c3fb7d8de47c7f910
 +	let materializedRoot = resolve(process.cwd(), ".vitehub", "email", "templates");
 +	const prepareTypes = async (options) => {
 +		templatesRoot = resolve(options.serverDirs?.[0] ?? resolve(options.projectRoot, "server"), "emails");
++		materializedRoot = resolve(options.projectRoot, ".vitehub", "email", "templates");
 +		const templateNames = (await listEmailTemplates(templatesRoot)).map((file) => emailTemplateFileName(templatesRoot, file)).sort();
 +		await writeFileIfChanged(resolve(options.projectRoot, ".vitehub", "types", "email.d.ts"), renderEmailTemplateTypes(templateNames));
++		await materializeEmailTemplates(templatesRoot, materializedRoot, options.projectRoot);
 +	};
  	return {
  		name: EMAIL_VITE_PLUGIN_NAME,
@@ -131,11 +133,10 @@ index 542d21ba99ac7c8ac884bc4d7139baeb75155345..90f9e2be9ad30e5c3fb7d8de47c7f910
 +			const projectRoot = resolveViteHubProjectRoot(config.root);
 +			templatesRoot = resolve(serverDirs?.[0] ?? resolve(projectRoot, "server"), "emails");
 +			await prepareTypes({ projectRoot, serverDirs });
-+			if (vercel) await materializeEmailTemplates(templatesRoot, materializedRoot, config.root);
  			definition = {
  				...configured,
  				handler: resolve(resolveViteHubGeneratedRoot(config), "email/definition.mjs")
-@@ -551,6 +629,7 @@ function hubEmail(options) {
+@@ -551,6 +630,7 @@ function hubEmail(options) {
  		},
  		resolveId(id) {
  			if (id === "#vitehub/email/definition") return resolvedEmailDefinitionId;

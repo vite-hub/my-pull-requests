@@ -6,7 +6,6 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/ui',
     '@vueuse/nuxt',
-    'nuxt-charts',
     'nuxt-og-image',
     'nuxt-skill-hub',
   ],

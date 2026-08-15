@@ -1,5 +1,5 @@
-import { useGitHub } from '../utils/github-client'
-import { buildMonthlyRecap, monthRange } from '../utils/monthly-recap'
+import { useGitHub } from './github-client'
+import { buildMonthlyRecap, monthRange } from './monthly-recap'
 
 type SearchItem = Awaited<ReturnType<ReturnType<typeof useGitHub>['rest']['search']['issuesAndPullRequests']>>['data']['items'][number]
 
@@ -7,8 +7,7 @@ function repositoryName(item: SearchItem) {
   return item.repository_url.split('/').slice(-2).join('/')
 }
 
-async function search(query: string) {
-  const github = useGitHub()
+async function search(github: ReturnType<typeof useGitHub>, query: string) {
   const items: SearchItem[] = []
   let total = 0
   for await (const response of github.paginate.iterator(github.rest.search.issuesAndPullRequests, { per_page: 100, q: query })) {
@@ -19,14 +18,15 @@ async function search(query: string) {
 }
 
 export async function getGitHubMonthlyRecap(month: string) {
-  const { data: viewer } = await useGitHub().rest.users.getAuthenticated()
+  const github = useGitHub()
+  const { data: viewer } = await github.rest.users.getAuthenticated()
   const { endDate, startDate } = monthRange(month)
   const author = `author:${viewer.login} is:public`
   const [openedPullRequests, mergedPullRequests, openedIssues, closedIssues] = await Promise.all([
-    search(`type:pr ${author} created:${startDate}..${endDate}`),
-    search(`type:pr ${author} is:merged merged:${startDate}..${endDate}`),
-    search(`type:issue ${author} created:${startDate}..${endDate}`),
-    search(`type:issue ${author} is:closed closed:${startDate}..${endDate}`),
+    search(github, `type:pr ${author} created:${startDate}..${endDate}`),
+    search(github, `type:pr ${author} is:merged merged:${startDate}..${endDate}`),
+    search(github, `type:issue ${author} created:${startDate}..${endDate}`),
+    search(github, `type:issue ${author} is:closed closed:${startDate}..${endDate}`),
   ])
   return buildMonthlyRecap({
     events: [
