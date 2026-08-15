@@ -1,3 +1,5 @@
+import { createCollection, createSource, defineCollection, defineSource } from 'vite-hub/source'
+
 import { createGitHubClient } from './github-client'
 import { buildMonthlyRecap, getMonthRange } from './monthly-recap'
 
@@ -17,7 +19,7 @@ async function search(github: ReturnType<typeof createGitHubClient>, query: stri
   return { items, total }
 }
 
-export async function fetchGitHubMonthlyRecap(month: string) {
+async function fetchGitHubMonthlyRecap(month: string) {
   const github = createGitHubClient()
   const { data: viewer } = await github.rest.users.getAuthenticated()
   const { endDate, startDate } = getMonthRange(month)
@@ -53,3 +55,11 @@ export async function fetchGitHubMonthlyRecap(month: string) {
     },
   })
 }
+
+const githubMonthlyRecaps = createSource(defineSource(() => ({
+  get: fetchGitHubMonthlyRecap,
+})), { rootDir: '.' })
+
+export const monthlyRecaps = createCollection(defineCollection({
+  sources: { github: githubMonthlyRecaps },
+}))
