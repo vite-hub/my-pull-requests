@@ -1,7 +1,5 @@
 import { env } from 'vite-hub/env'
 
-const isVercel = Boolean(process.env.VERCEL)
-
 export default defineNuxtConfig({
   modules: [
     'vite-hub/nuxt',
@@ -42,20 +40,11 @@ export default defineNuxtConfig({
 
   vitehub: {
     name: 'my-pull-requests',
-    preset: isVercel ? 'vercel' : 'cloudflare',
+    preset: 'cloudflare',
     kv: true,
-    schedule: isVercel ? { providerOutput: 'standalone' } : true,
-    workflow: { provider: isVercel ? 'vercel' : 'cloudflare' },
-    email: isVercel
-      ? {
-          driver: 'unemail/driver/resend',
-          options: {
-            apiKey: env({ secret: true, source: env.source('RESEND_API_KEY') }),
-          },
-        }
-      : {
-          driver: 'unemail/driver/cloudflare-email',
-        },
+    schedule: true,
+    workflow: true,
+    email: true,
     env: {
       server: {
         githubToken: env({

@@ -1,60 +1,22 @@
-diff --git a/dist/email-templates.d.ts b/dist/email-templates.d.ts
-new file mode 100644
-index 0000000000000000000000000000000000000000..13495f2c33cb4ad7af7fccb487e7f044bcdaa2b3
---- /dev/null
-+++ b/dist/email-templates.d.ts
-@@ -0,0 +1,4 @@
-+declare module "#vitehub/emails/*" {
-+    const render: (data?: Record<string, unknown>) => Promise<string>;
-+    export default render;
-+}
-diff --git a/dist/index.d.ts b/dist/index.d.ts
-index 1c354381bc316a81979f3f83de728bdecd1e45e2..91741da42b21c0688a269d2c373554aab21ed322 100644
---- a/dist/index.d.ts
-+++ b/dist/index.d.ts
-@@ -8,3 +8,4 @@ declare function createEmail(options: EmailDefinition): EmailClient;
- type EmailErrorCode = "EMAIL_AUTHENTICATION" | "EMAIL_NETWORK" | "EMAIL_NOT_CONFIGURED" | "EMAIL_PROVIDER_FAILED" | "EMAIL_RATE_LIMITED" | "EMAIL_TIMEOUT";
- //#endregion
- export { type EmailAddress, type EmailAddressList, type EmailAttachment, type EmailClient, type EmailDefinition, type EmailDriver, type EmailDriverFactory, type EmailDriverSource, type EmailErrorCode, type EmailMessage, type EmailSendResult, createEmail };
-+/// <reference path="./email-templates.d.ts" />
-diff --git a/dist/markdown.d.ts b/dist/markdown.d.ts
-index ba2739db9e87f119a2665d6031e2682cc4231974..b89d83100b569d14365719dad139fe156f7539e3 100644
---- a/dist/markdown.d.ts
-+++ b/dist/markdown.d.ts
-@@ -9,3 +9,4 @@ interface RenderedEmailMarkdown {
- declare function renderEmailMarkdown(template: string, options?: RenderEmailMarkdownOptions): Promise<RenderedEmailMarkdown>;
- //#endregion
- export { RenderEmailMarkdownOptions, RenderedEmailMarkdown, renderEmailMarkdown };
-+/// <reference path="./email-templates.d.ts" />
-diff --git a/dist/server.d.ts b/dist/server.d.ts
-index bcdb66c93b427989d59a9cdef1a019e792ea38e6..4a80bedc612a6764c5e5cceae814df42444558a9 100644
---- a/dist/server.d.ts
-+++ b/dist/server.d.ts
-@@ -4,3 +4,4 @@ import { i as EmailClient } from "./types-Dus3QvvS.js";
- declare const email: EmailClient;
- //#endregion
- export { email };
-+/// <reference path="./email-templates.d.ts" />
-diff --git a/dist/test.d.ts b/dist/test.d.ts
-index 8ec91e29f36fb2ec2926b7f0cd093487ecda838e..bb32ff8af8b711ed3170d2c56d35bfa6d1df30a9 100644
---- a/dist/test.d.ts
-+++ b/dist/test.d.ts
-@@ -13,3 +13,4 @@ declare function createMemoryEmailDriver(): MemoryEmailDriver;
- declare function createTestEmail(): TestEmailClient;
- //#endregion
- export { MemoryEmailDriver, TestEmailClient, createMemoryEmailDriver, createTestEmail };
-+/// <reference path="./email-templates.d.ts" />
 diff --git a/dist/vite.d.ts b/dist/vite.d.ts
-index 691ea1e07df844553f5dd77556f1dc7593b85b27..24d321b7a565ae7d2b5430e6f13fc99137c96e4d 100644
+index 691ea1e07df844553f5dd77556f1dc7593b85b27..05a25c56acdb5851fef01e0834f1029900a07315 100644
 --- a/dist/vite.d.ts
 +++ b/dist/vite.d.ts
-@@ -24,3 +24,4 @@ type EmailVitePlugin = Plugin & {
- declare function hubEmail(options: EmailVitePluginOptions): EmailVitePlugin;
- //#endregion
- export { EMAIL_DEFINITION_ID, EMAIL_VITE_PLUGIN_NAME, EmailVitePlugin, EmailVitePluginAPI, EmailVitePluginOptions, UnemailDriverSpecifier, hubEmail };
-+/// <reference path="./email-templates.d.ts" />
+@@ -16,7 +16,11 @@ interface EmailVitePluginOptions {
+   options?: EnvRuntimeConfigOptions;
+ }
+ interface EmailVitePluginAPI {
+-  getDefinition: () => GeneratedEmailDefinition | undefined;
++    getDefinition: () => GeneratedEmailDefinition | undefined;
++    prepareTypes: (options: {
++        projectRoot: string;
++        serverDirs?: string[];
++    }) => Promise<void>;
+ }
+ type EmailVitePlugin = Plugin & {
+   api: EmailVitePluginAPI;
 diff --git a/dist/vite.js b/dist/vite.js
-index 542d21ba99ac7c8ac884bc4d7139baeb75155345..110824d751b19dfab7e1c18420585f36fe932e57 100644
+index 542d21ba99ac7c8ac884bc4d7139baeb75155345..90f9e2be9ad30e5c3fb7d8de47c7f9102e8ef0e9 100644
 --- a/dist/vite.js
 +++ b/dist/vite.js
 @@ -1,6 +1,6 @@
@@ -66,7 +28,7 @@ index 542d21ba99ac7c8ac884bc4d7139baeb75155345..110824d751b19dfab7e1c18420585f36
  import { createRuntimeEnvRegistry } from "@vite-hub/env/vite";
  import { fileURLToPath } from "node:url";
  import { build } from "esbuild";
-@@ -504,6 +504,48 @@ function configureNitroCloudflareWorkers(config, email) {
+@@ -504,6 +504,59 @@ function configureNitroCloudflareWorkers(config, email) {
  		}
  	};
  }
@@ -99,9 +61,20 @@ index 542d21ba99ac7c8ac884bc4d7139baeb75155345..110824d751b19dfab7e1c18420585f36
 +	}
 +	return files;
 +}
++function emailTemplateFileName(root, file) {
++	return relative(root, file).replace(/\\/g, "/").replace(/\.md$/, "");
++}
++function renderEmailTemplateTypes(names) {
++	return names.map((name) => [
++		`declare module ${JSON.stringify(`${emailTemplatePrefix}${name}`)} {`,
++		"  const render: (data?: Record<string, unknown>) => Promise<string>",
++		"  export default render",
++		"}"
++	].join("\n")).join("\n\n") + (names.length ? "\n" : "");
++}
 +async function materializeEmailTemplates(templatesRoot, outputRoot, rootDir) {
 +	for (const file of await listEmailTemplates(templatesRoot)) {
-+		const name = relative(templatesRoot, file).replace(/\\/g, "/").replace(/\.md$/, "");
++		const name = emailTemplateFileName(templatesRoot, file);
 +		const target = resolve(outputRoot, name);
 +		const entry = `${target}.entry.mjs`;
 +		await writeFileIfChanged(entry, `export { default } from ${JSON.stringify(`/@fs/${file}?markdown-template`)}\n`);
@@ -115,7 +88,7 @@ index 542d21ba99ac7c8ac884bc4d7139baeb75155345..110824d751b19dfab7e1c18420585f36
  function hubEmail(options) {
  	if (!options || typeof options !== "object") throw new TypeError("[vitehub] Email requires an unemail/driver/* driver.");
  	const internalOptions = options;
-@@ -511,18 +553,33 @@ function hubEmail(options) {
+@@ -511,18 +564,43 @@ function hubEmail(options) {
  	const driverImport = resolveDriverImport(configured.driver);
  	const runtimeEnvImport = internalOptions.runtimeEnvImport ?? resolve(dirname(resolvePackageImport("@vite-hub/env/package.json")), "dist/server.js");
  	let cloudflare = false;
@@ -125,10 +98,19 @@ index 542d21ba99ac7c8ac884bc4d7139baeb75155345..110824d751b19dfab7e1c18420585f36
 +	let serverDirs;
 +	let templatesRoot = resolve(process.cwd(), "server", "emails");
 +	let materializedRoot = resolve(process.cwd(), ".vitehub", "email", "templates");
++	const prepareTypes = async (options) => {
++		templatesRoot = resolve(options.serverDirs?.[0] ?? resolve(options.projectRoot, "server"), "emails");
++		const templateNames = (await listEmailTemplates(templatesRoot)).map((file) => emailTemplateFileName(templatesRoot, file)).sort();
++		await writeFileIfChanged(resolve(options.projectRoot, ".vitehub", "types", "email.d.ts"), renderEmailTemplateTypes(templateNames));
++	};
  	return {
  		name: EMAIL_VITE_PLUGIN_NAME,
  		enforce: "pre",
- 		api: { getDefinition: () => definition },
+-		api: { getDefinition: () => definition },
++		api: {
++			getDefinition: () => definition,
++			prepareTypes
++		},
  		config(config) {
 -			cloudflare = getHostingProvider(resolveHosting(internalOptions, config)) === "cloudflare";
 +			serverDirs = config["__vitehubServerDirs"] ?? serverDirs;
@@ -141,17 +123,19 @@ index 542d21ba99ac7c8ac884bc4d7139baeb75155345..110824d751b19dfab7e1c18420585f36
  			if (cloudflare) configureNitroCloudflareWorkers(config, cloudflareEmail);
 -			return { ssr: { noExternal: mergeNoExternal(config.ssr?.noExternal) } };
 +			return {
-+				resolve: vercel ? { alias: { "#vitehub/emails": materializedRoot } } : void 0,
++				...vercel ? { resolve: { alias: { "#vitehub/emails": materializedRoot } } } : {},
 +				ssr: { noExternal: mergeNoExternal(config.ssr?.noExternal) }
 +			};
  		},
  		async configResolved(config) {
-+			templatesRoot = resolve(serverDirs?.[0] ?? resolve(resolveViteHubProjectRoot(config.root), "server"), "emails");
++			const projectRoot = resolveViteHubProjectRoot(config.root);
++			templatesRoot = resolve(serverDirs?.[0] ?? resolve(projectRoot, "server"), "emails");
++			await prepareTypes({ projectRoot, serverDirs });
 +			if (vercel) await materializeEmailTemplates(templatesRoot, materializedRoot, config.root);
  			definition = {
  				...configured,
  				handler: resolve(resolveViteHubGeneratedRoot(config), "email/definition.mjs")
-@@ -551,6 +608,7 @@ function hubEmail(options) {
+@@ -551,6 +629,7 @@ function hubEmail(options) {
  		},
  		resolveId(id) {
  			if (id === "#vitehub/email/definition") return resolvedEmailDefinitionId;

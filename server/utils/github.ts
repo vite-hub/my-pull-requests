@@ -1,4 +1,3 @@
-import { custom, registerSource, type Source } from 'vite-hub/source'
 import { createError, type H3Event } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
 
@@ -127,41 +126,23 @@ export function mapGitHubActivity(data: GitHubActivity) {
   }
 }
 
-const githubActivity = custom({
-  name: 'github-activity',
-  async getKeys() {
-    return ['activity']
-  },
-  async getItem(key) {
-    try {
-      const github = (await import('./github-client.ts')).useGitHub()
-      const activity = await github.graphql<GitHubActivity>(GITHUB_ACTIVITY_QUERY, {
-        issues: 'type:issue author:@me is:public sort:created-desc',
-        pullRequests: 'type:pr author:@me is:public sort:created-desc',
-      })
-
-      return {
-        key,
-        data: mapGitHubActivity(activity),
-      }
-    }
-    catch (error) {
-      const status = githubStatus(error)
-      if (status === 401) throw createError({ statusCode: 401, message: 'GitHub token invalid/expired' })
-      if (status === 429) throw createError({ statusCode: 429, message: 'GitHub rate limit exceeded' })
-      if (status === 403) throw createError({ statusCode: 403, message: 'GitHub API forbidden' })
-      if (status) throw createError({ statusCode: 502, message: 'Failed to fetch GitHub activity' })
-      throw error
-    }
-  },
-} satisfies Source<'activity', ReturnType<typeof mapGitHubActivity>>)
-
-const useGitHubActivity = registerSource('githubActivity', githubActivity)
-
 export const readGitHubActivity = defineCachedFunction(async (_event: H3Event) => {
-  const item = await useGitHubActivity().get('activity')
-  if (!item.data) throw createError({ statusCode: 500, message: 'GitHub activity source returned no data' })
-  return item.data
+  try {
+    const github = (await import('./github-client.ts')).useGitHub()
+    const activity = await github.graphql<GitHubActivity>(GITHUB_ACTIVITY_QUERY, {
+      issues: 'type:issue author:@me is:public sort:created-desc',
+      pullRequests: 'type:pr author:@me is:public sort:created-desc',
+    })
+    return mapGitHubActivity(activity)
+  }
+  catch (error) {
+    const status = githubStatus(error)
+    if (status === 401) throw createError({ statusCode: 401, message: 'GitHub token invalid/expired' })
+    if (status === 429) throw createError({ statusCode: 429, message: 'GitHub rate limit exceeded' })
+    if (status === 403) throw createError({ statusCode: 403, message: 'GitHub API forbidden' })
+    if (status) throw createError({ statusCode: 502, message: 'Failed to fetch GitHub activity' })
+    throw error
+  }
 }, {
   getKey: () => 'activity',
   maxAge: 60 * 5,

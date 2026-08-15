@@ -1,40 +1,56 @@
-# Showcase your Open Source Contributions 🤍
+# My Pull Requests
 
-Create a website with an RSS feed of your recent GitHub pull requests across the Open Source projects you contribute to.
+Showcase your recent open source contributions and publish a shareable GitHub recap every month. See it live at [prs.onmax.me](https://prs.onmax.me).
 
-![atinux-pull-requests](https://github.com/user-attachments/assets/cfa82cc2-51af-4fd4-9012-1f8517dd370f)
+This is a [ViteHub](https://vitehub.dev) project. ViteHub Schedule, Workflow, KV, Email, and Markdown Template primitives produce and deliver the monthly recap.
 
-Demo: https://prs.atinux.com
+## Recent contributions
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fatinux%2Fmy-pull-requests&env=NUXT_GITHUB_TOKEN&envDescription=Create%20a%20GitHub%20token%20with%20no%20special%20scope.&envLink=https%3A%2F%2Fgithub.com%2Fsettings%2Fpersonal-access-tokens%2Fnew&project-name=my-pull-requests&demo-title=My%20Pull%20Requests&demo-description=Create%20a%20website%20with%20an%20RSS%20feed%20of%20your%20recent%20GitHub%20pull%20requests%20across%20the%20Open%20Source%20projects%20you%20contribute%20to.&demo-url=https%3A%2F%2Fprs.atinux.com&demo-image=https%3A%2F%2Fprs.atinux.com%2Fog.png)
+[![Recent GitHub pull requests and issues](.github/assets/landing.jpg)](https://prs.onmax.me)
+
+## Monthly recap
+
+[![July 2026 GitHub monthly recap](.github/assets/monthly-recap.jpg)](https://prs.onmax.me/recap/2026-07)
 
 ## Features
 
-- List the 50 most recent pull requests you've contributed to.
-- RSS feed
-- Only add your GitHub token to get started
+- Lists your 50 most recent pull requests and issues, with sorting by date or repository stars.
+- Publishes an RSS feed at `/feed.xml`.
+- Collects the previous month's GitHub activity on the first day of each month.
+- Stores, emails, and publishes a visual recap with contribution totals, busiest periods, top repository, and daily activity.
 
 ## Setup
 
-Make sure to install the dependencies with [pnpm](https://pnpm.io/installation#using-corepack):
+Use Node.js 24.15 or newer and [pnpm](https://pnpm.io/installation#using-corepack), then install the dependencies:
 
 ```bash
+corepack enable
 pnpm install
 ```
 
-Copy the `.env.example` file to `.env` and fill in your GitHub token:
+Copy the environment template:
 
 ```bash
 cp .env.example .env
 ```
 
-Create a GitHub token with no special scope on [GitHub](https://github.com/settings/personal-access-tokens/new) and set it in the `.env` file:
+Create a [fine-grained GitHub token](https://github.com/settings/personal-access-tokens/new) with no additional permissions and add it to `.env`:
 
 ```bash
 NUXT_GITHUB_TOKEN=your-github-token
 ```
 
-## Development Server
+The contribution page and RSS feed only need the GitHub token. To run the monthly recap, also configure its sender, recipient, and public URL:
+
+```bash
+RECAP_FROM=recap@example.com
+RECAP_SITE_URL=http://localhost:3000
+RECAP_TO=you@example.com
+```
+
+Email delivery and KV storage depend on the deployment target, as described below.
+
+## Development
 
 Start the development server on `http://localhost:3000`:
 
@@ -50,9 +66,53 @@ Build the application for production:
 pnpm build
 ```
 
+## Deploy anywhere
+
+ViteHub keeps the application code portable across hosts. The repository defaults to Cloudflare; another host needs a different `vitehub.preset` and, when the host has no native email binding, an explicit email driver.
+
+| Host | KV | Email |
+| --- | --- | --- |
+| Cloudflare Workers | A `KV` namespace binding; no runtime API key | An `EMAIL` send binding; no API key |
+| Vercel | Upstash through `KV_REST_API_URL` and `KV_REST_API_TOKEN` | Resend through `RESEND_API_KEY` |
+| Your own VPS | Persistent local storage on one server, or an external KV service for multiple replicas | Resend through `RESEND_API_KEY` |
+
+### Cloudflare Workers
+
+Cloudflare is the default target. Create a KV namespace, enable Email Service for your sending domain, and bind them as `KV` and `EMAIL`. Update `wrangler.toml` with your Cloudflare account and KV namespace IDs. `email: true` selects Cloudflare Email automatically, and the binding grants access without an API key in the application.
+
+Set `NUXT_GITHUB_TOKEN`, `RECAP_FROM`, `RECAP_SITE_URL`, and `RECAP_TO` in the Worker environment, then deploy the generated Worker:
+
+```bash
+pnpm build
+pnpm exec nitro deploy --prebuilt
+```
+
+See [ViteHub on Cloudflare](https://vitehub.dev/docs/frameworks-hosts/cloudflare).
+
+### Vercel
+
+Set `vitehub.preset` to `vercel` in `nuxt.config.ts` and configure an explicit email driver such as Resend. ViteHub derives the Vercel Schedule and Workflow output from the preset, so those options remain `true`. Connect an Upstash Redis integration so Vercel injects `KV_REST_API_URL` and `KV_REST_API_TOKEN`, then add `RESEND_API_KEY` and the common recap variables before deploying through Git or the Vercel CLI.
+
+See [ViteHub on Vercel](https://vitehub.dev/docs/frameworks-hosts/vercel).
+
+### Your own VPS
+
+A VPS is the larger operational path because you own the long-running Node process, persistent volume, TLS, backups, and restarts. Self-hosting requires selecting ViteHub's `node` preset, using the Schedule process runtime, configuring OpenWorkflow with SQLite or Postgres, and choosing an email driver such as Resend with its API key.
+
+One VPS can keep KV and Workflow state on a mounted persistent volume without a KV API key. Use an external durable store when the filesystem is ephemeral or the app runs on multiple replicas.
+
+After configuring the Node providers, build and run the server:
+
+```bash
+pnpm build
+node .output/server/index.mjs
+```
+
+See [ViteHub on Node and self-hosted servers](https://vitehub.dev/docs/frameworks-hosts/node-self-hosted).
+
 ## Credits
 
-This project is inspired by [Anthony Fu](https://github.com/antfu)'s [releases.antfu.me](https://github.com/antfu/releases.antfu.me) project.
+The original idea and project are by [Sébastien Chopin](https://github.com/atinux): [atinux/my-pull-requests](https://github.com/atinux/my-pull-requests), live at [prs.atinux.com](https://prs.atinux.com). His project was inspired by [Anthony Fu](https://github.com/antfu)'s [releases.antfu.me](https://github.com/antfu/releases.antfu.me).
 
 ## License
 
