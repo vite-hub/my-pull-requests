@@ -1,4 +1,10 @@
 {
+  "compilerOptions": {
+    "paths": {
+      "#vitehub/emails/*": ["./.vitehub/email/templates/*"],
+      "#vitehub/env/server": ["./.vitehub/env/server.mjs"]
+    }
+  },
   "files": [],
   "references": [
     {

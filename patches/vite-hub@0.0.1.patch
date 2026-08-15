@@ -1,0 +1,38 @@
+diff --git a/dist/nuxt.js b/dist/nuxt.js
+index a78b6ce5e825c0c8c03d297ed3cb209252319236..9971c407907a8d55857ca7ee8130b46930c36324 100644
+--- a/dist/nuxt.js
++++ b/dist/nuxt.js
+@@ -57,6 +57,17 @@ function configHandler(plugin) {
+ 	if (typeof plugin.config === "function") return plugin.config;
+ 	return plugin.config?.handler;
+ }
++function closeBundleHandler(plugin) {
++	if (typeof plugin.closeBundle === "function") return plugin.closeBundle;
++	return plugin.closeBundle?.handler;
++}
++function providerOutputNitroModule(plugins) {
++	const names = /* @__PURE__ */ new Set(["@vite-hub/schedule/vite", "@vite-hub/workflow/vite"]);
++	const handlers = plugins.filter((plugin) => names.has(plugin.name)).map(closeBundleHandler).filter(Boolean);
++	return (nitro) => nitro.hooks.hook("compiled", async () => {
++		for (const handler of handlers) await handler.call({});
++	});
++}
+ function queueNitroConfigHandler(plugin) {
+ 	return plugin.vitehub?.queue?.createNitroConfig;
+ }
+@@ -176,6 +187,7 @@ const viteHubNuxtModule = async function viteHubNuxtModule(inlineOptions, nuxt)
+ 	const existingNames = new Set(flattenPlugins(existing).map((plugin) => plugin.name).filter(Boolean));
+ 	const existingPluginsByName = new Map(flattenPlugins(existing).filter((plugin) => plugin.name).map((plugin) => [plugin.name, plugin]));
+ 	const installedPlugins = [...plugins.map((plugin) => existingPluginsByName.get(plugin.name) || plugin), ...flattenPlugins(existing).filter((plugin) => (plugin.name.startsWith("@vite-hub/") || plugin.name.startsWith("vite-hub/")) && !plugins.some((candidate) => candidate.name === plugin.name))];
++	const finalizeProviderOutputs = options.preset === "vercel" && !nuxt.options.dev ? providerOutputNitroModule(installedPlugins) : void 0;
+ 	nuxt.options.vite ??= {};
+ 	const viteConfig = nuxt.options.vite;
+ 	if (envConfig && Object.values(envConfig).some(Boolean)) {
+@@ -210,6 +222,7 @@ const viteHubNuxtModule = async function viteHubNuxtModule(inlineOptions, nuxt)
+ 		await applyNitroConfig(installedPlugins, config, nuxt);
+ 		const alias = config.alias ??= {};
+ 		for (const [name, path] of Object.entries(generatedAliases)) alias[name] ??= path;
++		if (finalizeProviderOutputs) (config.modules ??= []).push(finalizeProviderOutputs);
+ 	});
+ 	if (options.agent) addVueImports(nuxt, "vite-hub/agent/vue", agentVueComposables);
+ 	if (options.auth) {
