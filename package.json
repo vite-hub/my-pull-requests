@@ -30,7 +30,7 @@
     "satori": "^0.29.0",
     "tailwindcss": "^4.3.3",
     "ufo": "^1.6.1",
-    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@3e5a8f1815a3b575c19e0ef74238d11bc802c09b",
+    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@cd0121c16b0108f4acbe9491d5d484b3d9bcf9b8",
     "vue": "^3.5.40",
     "vue-router": "^5.2.0"
   },
