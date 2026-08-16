@@ -24,6 +24,8 @@ type GitHubActivity = {
   viewer: { avatarUrl: string, login: string, name: string | null }
 }
 
+type GitHubError = { response?: { headers?: Record<string, string | undefined> }, status?: number }
+
 const GITHUB_ACTIVITY_QUERY = `#graphql
   query GitHubActivity($pullRequests: String!, $issues: String!) {
     viewer {
@@ -72,16 +74,12 @@ const GITHUB_ACTIVITY_QUERY = `#graphql
 
 export function getGitHubStatus(error: unknown) {
   if (!error || typeof error !== 'object') return
-  const response = 'response' in error && error.response && typeof error.response === 'object' ? error.response : undefined
-  const headers = response && 'headers' in response && response.headers && typeof response.headers === 'object'
-    ? response.headers
-    : undefined
-  const status = 'status' in error && typeof error.status === 'number' ? error.status : undefined
-  if (status === 403 && headers) {
-    const remaining = 'x-ratelimit-remaining' in headers ? headers['x-ratelimit-remaining'] : undefined
-    if ('retry-after' in headers || remaining === '0') return 429
-  }
-  return status
+  const { response, status } = error as GitHubError
+  if (typeof status !== 'number') return
+  const headers = response?.headers
+  return status === 403 && (headers?.['retry-after'] !== undefined || headers?.['x-ratelimit-remaining'] === '0')
+    ? 429
+    : status
 }
 
 export function normalizeGitHubActivity(data: GitHubActivity) {
