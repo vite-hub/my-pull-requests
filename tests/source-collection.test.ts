@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { createCollection, createSource, defineCollection, defineSource } from 'vite-hub/source'
+import { createSource, defineCollection, defineSource } from 'vite-hub/source'
 
 function enumerable<const TKey extends string, TData>(key: TKey, data: TData) {
   return {
@@ -15,12 +15,12 @@ function enumerable<const TKey extends string, TData>(key: TKey, data: TData) {
 }
 
 test('keeps equal Source keys distinct by alias', async () => {
-  const collection = createCollection(defineCollection({
+  const collection = defineCollection({
     sources: {
       first: enumerable('same', 1),
       second: enumerable('same', 2),
     },
-  }))
+  })
 
   assert.deepEqual(await collection.items(), [
     { data: 1, identity: ['first', 'same'], key: 'same', source: 'first' },
@@ -36,7 +36,7 @@ test('gets keyed Sources without requiring enumeration', async () => {
     },
   }))
   const keyed = createSource(definition, { rootDir: '/recaps' })
-  const collection = createCollection(defineCollection({ sources: { keyed } }))
+  const collection = defineCollection({ sources: { keyed } })
 
   assert.equal(await collection.get(['keyed', 'july']), '/recaps:JULY')
   await assert.rejects(collection.items(), /source alias "keyed" is not enumerable/)

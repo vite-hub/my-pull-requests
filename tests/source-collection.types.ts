@@ -1,4 +1,4 @@
-import { createCollection, createSource, defineCollection, defineSource } from 'vite-hub/source'
+import { createSource, defineCollection, defineSource } from 'vite-hub/source'
 
 function reader<const TKey extends string, TData>(key: TKey, data: TData) {
   return {
@@ -17,13 +17,13 @@ const keyedDefinition = defineSource(context => ({
   },
 }))
 const keyed = createSource(keyedDefinition, { rootDir: '/recaps' })
-const collection = createCollection(defineCollection({
+const collection = defineCollection({
   sources: {
     count: reader('same', 1),
     keyed,
     title: reader('same', 'Title'),
   },
-}))
+})
 
 const count = await collection.get(['count', 'same'])
 const countData: number | undefined = count.data

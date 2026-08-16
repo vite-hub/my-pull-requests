@@ -1,11 +1,12 @@
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index 73f23ea16b76fb5d2116914e01c41326bafc9f51..9b5ebc424fbc7c80ce0171d6b183b1cf34776372 100644
+index 73f23ea16b76fb5d2116914e01c41326bafc9f51..321eaaf1fa770e9ac4312afdac2aa1fcdbf0bbb5 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
 @@ -3,7 +3,38 @@ import { ViteHubError } from "@vite-hub/runtime";
  
  //#region src/core/define.d.ts
  declare function defineSource<const TSource extends Source>(source: TSource): TSource;
++declare function defineSource<const TReader extends { get(key: any): Promise<any> }>(source: TReader): TReader;
 +type RuntimeSourceDefinition<TReader extends object> = (context: SourceContext) => TReader;
 +declare function defineSource<const TReader extends object>(definition: RuntimeSourceDefinition<TReader>): RuntimeSourceDefinition<TReader>;
  declare function defineSources<const TSources extends Record<string, Source>>(sources: TSources): TSources;
@@ -36,8 +37,7 @@ index 73f23ea16b76fb5d2116914e01c41326bafc9f51..9b5ebc424fbc7c80ce0171d6b183b1cf
 +    ]): Promise<CollectionSourceValue<TSources[TSource]>>;
 +    items(): Promise<Array<CollectionItem<TSources>>>;
 +}
-+declare function defineCollection<const TSources extends CollectionSources>(collection: CollectionDefinition<TSources>): CollectionDefinition<TSources>;
-+declare function createCollection<const TSources extends CollectionSources>(collection: CollectionDefinition<TSources>): CollectionReader<TSources>;
++declare function defineCollection<const TSources extends CollectionSources>(collection: CollectionDefinition<TSources>): CollectionReader<TSources>;
  //#endregion
  //#region src/core/registry.d.ts
  declare function registerSource<const TName extends string, const TSource extends Source>(name: TName, source: TSource): TSource;
@@ -47,12 +47,12 @@ index 73f23ea16b76fb5d2116914e01c41326bafc9f51..9b5ebc424fbc7c80ce0171d6b183b1cf
  //#endregion
 -export { type ReadSourceOptions, type ReadSourceResult, type Source, type SourceCacheOptions, type SourceContent, type SourceContext, type SourceData, type SourceErrorCode, type SourceItem, type SourceKey, type SourceListEntry, type SourceMap, type SourceMetadata, type SourceName, type SourceReader, type SourceSearchHit, type SourceSearchQuery, clearSources, custom, defineSource, defineSources, getRegisteredSource, registerSource, registerSources, useSource };
 \ No newline at end of file
-+export { type ReadSourceOptions, type ReadSourceResult, type Source, type SourceCacheOptions, type SourceContent, type SourceContext, type SourceData, type SourceErrorCode, type SourceItem, type SourceKey, type SourceListEntry, type SourceMap, type SourceMetadata, type SourceName, type SourceReader, type SourceSearchHit, type SourceSearchQuery, clearSources, createCollection, createSource, custom, defineCollection, defineSource, defineSources, getRegisteredSource, registerSource, registerSources, useSource };
++export { type ReadSourceOptions, type ReadSourceResult, type Source, type SourceCacheOptions, type SourceContent, type SourceContext, type SourceData, type SourceErrorCode, type SourceItem, type SourceKey, type SourceListEntry, type SourceMap, type SourceMetadata, type SourceName, type SourceReader, type SourceSearchHit, type SourceSearchQuery, clearSources, createSource, custom, defineCollection, defineSource, defineSources, getRegisteredSource, registerSource, registerSources, useSource };
 diff --git a/dist/index.js b/dist/index.js
-index d2ad9404b960b03df346fcad3ae3d01a62214517..cd428fb3b2e04ed334419e9ec9673862b4911d2e 100644
+index d2ad9404b960b03df346fcad3ae3d01a62214517..6f4b2bad421f76e9804ff11f13d5e745c8b95f9b 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -6,6 +6,38 @@ function defineSource(source) {
+@@ -6,6 +6,35 @@ function defineSource(source) {
  function defineSources(sources) {
  	return sources;
  }
@@ -62,9 +62,6 @@ index d2ad9404b960b03df346fcad3ae3d01a62214517..cd428fb3b2e04ed334419e9ec9673862
 +//#endregion
 +//#region src/core/collection.ts
 +function defineCollection(collection) {
-+	return collection;
-+}
-+function createCollection(collection) {
 +	const { sources } = collection;
 +	function entry(source, item) {
 +		return {
@@ -91,9 +88,9 @@ index d2ad9404b960b03df346fcad3ae3d01a62214517..cd428fb3b2e04ed334419e9ec9673862
  //#endregion
  //#region src/core/registry.ts
  const sourceRegistry = /* @__PURE__ */ new Map();
-@@ -119,4 +151,4 @@ function custom(source) {
+@@ -119,4 +148,4 @@ function custom(source) {
  	return source;
  }
  //#endregion
 -export { clearSources, custom, defineSource, defineSources, getRegisteredSource, registerSource, registerSources, useSource };
-+export { clearSources, createCollection, createSource, custom, defineCollection, defineSource, defineSources, getRegisteredSource, registerSource, registerSources, useSource };
++export { clearSources, createSource, custom, defineCollection, defineSource, defineSources, getRegisteredSource, registerSource, registerSources, useSource };

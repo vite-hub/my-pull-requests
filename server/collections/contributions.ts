@@ -1,6 +1,6 @@
 import { createError } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
-import { createCollection, createSource, defineCollection, defineSource } from 'vite-hub/source'
+import { defineCollection, defineSource } from 'vite-hub/source'
 
 type GitHubItem = {
   createdAt: string
@@ -149,10 +149,10 @@ const getRecentGitHubContributions = defineCachedFunction(async () => {
   swr: false,
 })
 
-const githubContributions = createSource(defineSource(() => ({
-  get: (_range: 'recent') => getRecentGitHubContributions(),
-})), { rootDir: '.' })
-
-export const contributions = createCollection(defineCollection({
-  sources: { github: githubContributions },
-}))
+export const contributions = defineCollection({
+  sources: {
+    github: defineSource({
+      get: (_range: 'recent') => getRecentGitHubContributions(),
+    }),
+  },
+})

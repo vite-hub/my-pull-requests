@@ -1,4 +1,4 @@
-import { createCollection, createSource, defineCollection, defineSource } from 'vite-hub/source'
+import { defineCollection, defineSource } from 'vite-hub/source'
 
 import { createGitHubClient } from '../utils/github-client'
 import { buildMonthlyRecap, getMonthRange } from '../utils/monthly-recap'
@@ -56,10 +56,8 @@ async function fetchGitHubMonthlyRecap(month: string) {
   })
 }
 
-const githubMonthlyRecaps = createSource(defineSource(() => ({
-  get: fetchGitHubMonthlyRecap,
-})), { rootDir: '.' })
-
-export const monthlyRecaps = createCollection(defineCollection({
-  sources: { github: githubMonthlyRecaps },
-}))
+export const monthlyRecaps = defineCollection({
+  sources: {
+    github: defineSource({ get: fetchGitHubMonthlyRecap }),
+  },
+})

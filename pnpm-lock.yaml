@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@vite-hub/source@0.0.1': a35ed25dd6a908b9fa1a9cfa5c939729c406ed1d4e585ee3249d2b7730c04a8f
+  '@vite-hub/source@0.0.1': 2635e8d222a95cd9cfdc6c0f16decf73434a761c6f96c4371df49c4fb7908709
   '@vite-hub/workflow@0.0.1': ba06aecde58ff0120be1b3bec18cabb9b41be3852609037e355d521d6660d69d
 
 importers:
@@ -14478,7 +14478,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vite-hub/source@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bb473ef9edcd20688bf26c75661944e06dbb051e(patch_hash=a35ed25dd6a908b9fa1a9cfa5c939729c406ed1d4e585ee3249d2b7730c04a8f)':
+  '@vite-hub/source@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bb473ef9edcd20688bf26c75661944e06dbb051e(patch_hash=2635e8d222a95cd9cfdc6c0f16decf73434a761c6f96c4371df49c4fb7908709)':
     dependencies:
       '@vite-hub/runtime': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@bb473ef9edcd20688bf26c75661944e06dbb051e
       effect: 4.0.0-beta.99
@@ -14508,7 +14508,7 @@ snapshots:
       '@vite-hub/history': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/history@bb473ef9edcd20688bf26c75661944e06dbb051e
       '@vite-hub/markdown-template': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@bb473ef9edcd20688bf26c75661944e06dbb051e(vite@8.2.1)
       '@vite-hub/runtime': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@bb473ef9edcd20688bf26c75661944e06dbb051e
-      '@vite-hub/source': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bb473ef9edcd20688bf26c75661944e06dbb051e(patch_hash=a35ed25dd6a908b9fa1a9cfa5c939729c406ed1d4e585ee3249d2b7730c04a8f)
+      '@vite-hub/source': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bb473ef9edcd20688bf26c75661944e06dbb051e(patch_hash=2635e8d222a95cd9cfdc6c0f16decf73434a761c6f96c4371df49c4fb7908709)
       ai: 6.0.228(zod@4.4.3)
       defu: 6.1.7
       exsolve: 1.1.1
@@ -14546,7 +14546,7 @@ snapshots:
       '@vite-hub/history': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/history@bb473ef9edcd20688bf26c75661944e06dbb051e
       '@vite-hub/markdown-template': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/markdown-template@bb473ef9edcd20688bf26c75661944e06dbb051e(vite@8.2.1)
       '@vite-hub/runtime': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/runtime@bb473ef9edcd20688bf26c75661944e06dbb051e
-      '@vite-hub/source': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bb473ef9edcd20688bf26c75661944e06dbb051e(patch_hash=a35ed25dd6a908b9fa1a9cfa5c939729c406ed1d4e585ee3249d2b7730c04a8f)
+      '@vite-hub/source': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bb473ef9edcd20688bf26c75661944e06dbb051e(patch_hash=2635e8d222a95cd9cfdc6c0f16decf73434a761c6f96c4371df49c4fb7908709)
       ai: 7.0.38(zod@4.4.3)
       defu: 6.1.7
       exsolve: 1.1.1
@@ -20472,7 +20472,7 @@ snapshots:
       '@vite-hub/sandbox': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/sandbox@bb473ef9edcd20688bf26c75661944e06dbb051e(@cloudflare/sandbox@0.8.14)(@vercel/sandbox@1.10.2)(crossws@0.4.10(srvx@0.11.22))(oxc-parser@0.143.0)(rolldown@1.2.3)(vite@8.2.1)
       '@vite-hub/schedule': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/schedule@bb473ef9edcd20688bf26c75661944e06dbb051e(@vite-hub/kv@https://pkg.pr.new/vite-hub/vitehub/@vite-hub/kv@bb473ef9edcd20688bf26c75661944e06dbb051e(@azure/identity@4.13.1(supports-color@8.1.1))(@azure/storage-blob@12.33.0(supports-color@8.1.1))(@netlify/blobs@10.7.13(supports-color@8.1.1))(@upstash/redis@1.38.2)(@vercel/blob@2.8.0)(@vercel/functions@3.9.3(@aws-sdk/credential-provider-web-identity@3.972.49)(ws@8.21.0))(aws4fetch@1.0.20)(chokidar@5.0.0)(db0@0.3.4(@libsql/client@0.17.4)(drizzle-orm@0.45.2(@cloudflare/workers-types@4.20260702.1)(@libsql/client@0.17.4)(@opentelemetry/api@1.9.1)(@upstash/redis@1.38.2)(kysely@0.29.5)(sql.js@1.14.1)))(ioredis@5.7.0(supports-color@8.1.1))(lru-cache@11.5.2)(ofetch@2.0.0-alpha.3)(uploadthing@7.7.4(express@5.2.1(supports-color@8.1.1))(h3@2.0.1-rc.26(crossws@0.4.10(srvx@0.11.22)))(tailwindcss@4.3.3))(vite@8.2.1))(vite@8.2.1)
       '@vite-hub/shell': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/shell@bb473ef9edcd20688bf26c75661944e06dbb051e(supports-color@8.1.1)
-      '@vite-hub/source': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bb473ef9edcd20688bf26c75661944e06dbb051e(patch_hash=a35ed25dd6a908b9fa1a9cfa5c939729c406ed1d4e585ee3249d2b7730c04a8f)
+      '@vite-hub/source': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@bb473ef9edcd20688bf26c75661944e06dbb051e(patch_hash=2635e8d222a95cd9cfdc6c0f16decf73434a761c6f96c4371df49c4fb7908709)
       '@vite-hub/workflow': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@bb473ef9edcd20688bf26c75661944e06dbb051e(patch_hash=ba06aecde58ff0120be1b3bec18cabb9b41be3852609037e355d521d6660d69d)(032c90ff59bf6af9892585d657a25a8b)
       '@vite-hub/workspace': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@bb473ef9edcd20688bf26c75661944e06dbb051e(5db8e2ee8d3e9f7263e2779875d51b55)
       '@workflow/builders': 5.0.0-beta.35(@opentelemetry/api@1.9.1)(@swc/helpers@0.5.17)(supports-color@8.1.1)(ws@8.21.0)
