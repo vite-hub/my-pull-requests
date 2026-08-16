@@ -1,5 +1,5 @@
 diff --git a/dist/vite-Di-j31Xs.js b/dist/vite-Di-j31Xs.js
-index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..9abaf130f48fb25edd5d9d3e2cbf95d38b0a49b1 100644
+index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..98db2f4a6dd74bd906bd44cabaeae36c33196e07 100644
 --- a/dist/vite-Di-j31Xs.js
 +++ b/dist/vite-Di-j31Xs.js
 @@ -2,6 +2,7 @@ import { a as writeRuntimeRegistryFile, i as createRuntimeRegistryContents, n as
@@ -112,7 +112,7 @@ index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..9abaf130f48fb25edd5d9d3e2cbf95d3
  	});
  }
  function hubSchedule(options = {}) {
-@@ -1185,11 +1211,28 @@ function hubSchedule(options = {}) {
+@@ -1185,11 +1211,29 @@ function hubSchedule(options = {}) {
  		},
  		async closeBundle() {
  			if (!resolved || shouldSkipViteProviderBuild(resolved.command, getViteMode())) return;
@@ -123,6 +123,7 @@ index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..9abaf130f48fb25edd5d9d3e2cbf95d3
 +			if (process.env.VERCEL && projectRoot) {
 +				const projectRequire = createRequire(resolve(projectRoot, "package.json"));
 +				for (const specifier of ["@vite-hub/workflow/runtime/state", "@vite-hub/workflow/runtime/vercel-vite", "workflow/api", "workflow/runtime"]) bundleAlias[specifier] = projectRequire.resolve(specifier);
++				bundleAlias["@workflow/core/runtime/world-target"] = createRequire(bundleAlias["workflow/api"]).resolve("@workflow/world-vercel");
 +				const definitions = discoverRegistrySchedules();
 +				const artifacts = await writeProviderEntries(projectRoot, void 0, definitions);
 +				const crons = await readDefinitionCrons(artifacts.definitions);
