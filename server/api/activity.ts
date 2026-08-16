@@ -1,3 +1,5 @@
 import { defineEventHandler } from 'h3'
 
-export default defineEventHandler(event => getGitHubActivity(event))
+import { contributions } from '../collections/contributions'
+
+export default defineEventHandler(() => contributions.get(['github', 'recent']))

@@ -1,9 +1,11 @@
 import { Feed } from 'feed'
 import { appendHeader, defineEventHandler, getRequestURL } from 'h3'
 
+import { contributions } from '../collections/contributions'
+
 export default defineEventHandler(async (event) => {
   const domain = getRequestURL(event).origin
-  const { user, prs } = (await getGitHubActivity(event)).contributions
+  const { user, prs } = (await contributions.get(['github', 'recent'])).contributions
   const favicon = new URL('/favicon.png', domain).href
   const feed = new Feed({
     title: `${user.name} is contributing...`,

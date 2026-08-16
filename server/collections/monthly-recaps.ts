@@ -1,7 +1,7 @@
 import { createCollection, createSource, defineCollection, defineSource } from 'vite-hub/source'
 
-import { createGitHubClient } from './github-client'
-import { buildMonthlyRecap, getMonthRange } from './monthly-recap'
+import { createGitHubClient } from '../utils/github-client'
+import { buildMonthlyRecap, getMonthRange } from '../utils/monthly-recap'
 
 type SearchItem = Awaited<ReturnType<ReturnType<typeof createGitHubClient>['rest']['search']['issuesAndPullRequests']>>['data']['items'][number]
 

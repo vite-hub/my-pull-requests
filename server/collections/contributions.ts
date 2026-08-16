@@ -1,5 +1,6 @@
-import { createError, type H3Event } from 'h3'
+import { createError } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
+import { createCollection, createSource, defineCollection, defineSource } from 'vite-hub/source'
 
 type GitHubItem = {
   createdAt: string
@@ -126,9 +127,9 @@ export function normalizeGitHubActivity(data: GitHubActivity) {
   }
 }
 
-export const getGitHubActivity = defineCachedFunction(async (_event: H3Event) => {
+const getRecentGitHubContributions = defineCachedFunction(async () => {
   try {
-    const github = (await import('./github-client.ts')).createGitHubClient()
+    const github = (await import('../utils/github-client.ts')).createGitHubClient()
     const activity = await github.graphql<GitHubActivity>(GITHUB_ACTIVITY_QUERY, {
       issues: 'type:issue author:@me is:public sort:created-desc',
       pullRequests: 'type:pr author:@me is:public sort:created-desc',
@@ -149,3 +150,11 @@ export const getGitHubActivity = defineCachedFunction(async (_event: H3Event) =>
   name: 'github-activity',
   swr: false,
 })
+
+const githubContributions = createSource(defineSource(() => ({
+  get: (_range: 'recent') => getRecentGitHubContributions(),
+})), { rootDir: '.' })
+
+export const contributions = createCollection(defineCollection({
+  sources: { github: githubContributions },
+}))
