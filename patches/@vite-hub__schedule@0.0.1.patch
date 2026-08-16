@@ -1,5 +1,5 @@
 diff --git a/dist/vite-Di-j31Xs.js b/dist/vite-Di-j31Xs.js
-index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..e0b5a8b7ff71a57fdd01acdc605feb4488eb018f 100644
+index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..7af438012b43577d5c2aa50a97bd27682817da97 100644
 --- a/dist/vite-Di-j31Xs.js
 +++ b/dist/vite-Di-j31Xs.js
 @@ -2,6 +2,7 @@ import { a as writeRuntimeRegistryFile, i as createRuntimeRegistryContents, n as
@@ -10,6 +10,19 @@ index 657c9a5b22d5f9b7db7bb9d3f54a00220b12cff2..e0b5a8b7ff71a57fdd01acdc605feb44
  import { fileURLToPath } from "node:url";
  import { build } from "esbuild";
  import { isDeepStrictEqual } from "node:util";
+@@ -280,10 +281,10 @@ async function bundleEsmEntry(entryFile, outfile, options = {}) {
+ 	await build({
+ 		alias: aliases,
+ 		banner: options.banner || format === "esm" && platform === "node" ? { js: [options.banner, ...format === "esm" && platform === "node" ? [
+-			"import { createRequire as __createRequire } from \"node:module\";",
++			"import { createRequire as __vitehubScheduleCreateRequire } from \"node:module\";",
+ 			"import { dirname as __vitehubDirname } from \"node:path\";",
+ 			"import { fileURLToPath as __vitehubFileURLToPath } from \"node:url\";",
+-			"globalThis.require = __createRequire(import.meta.url);",
++			"globalThis.require = __vitehubScheduleCreateRequire(import.meta.url);",
+ 			"globalThis.__filename = __vitehubFileURLToPath(import.meta.url);",
+ 			"globalThis.__dirname = __vitehubDirname(globalThis.__filename);"
+ 		] : []].filter(Boolean).join("\n") } : void 0,
 @@ -427,9 +428,18 @@ function readStaticString(source) {
  }
  function renderProviderEntry(file, registryFile, provider, scheduleName) {
