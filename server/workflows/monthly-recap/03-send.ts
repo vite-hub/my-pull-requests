@@ -5,8 +5,6 @@ import { email } from 'vite-hub/email/server'
 import renderMonthlyRecap from '#vitehub/emails/monthly-recap'
 
 export default async function (recap: MonthlyRecap) {
-  'use step'
-
   const { from, siteUrl, to } = useServerEnv().recap
 
   await email.send({
