@@ -37,11 +37,11 @@ export default defineNuxtConfig({
 
   vitehub: {
     name: 'my-pull-requests',
-    preset: 'cloudflare',
+    preset: process.env.VERCEL ? 'vercel' : 'cloudflare',
     kv: true,
     schedule: true,
     workflow: true,
-    email: true,
+    email: process.env.VERCEL ? { driver: 'unemail/driver/resend' } : true,
     env: {
       server: {
         githubToken: env({

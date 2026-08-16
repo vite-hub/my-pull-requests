@@ -91,7 +91,7 @@ See [ViteHub on Cloudflare](https://vitehub.dev/docs/frameworks-hosts/cloudflare
 
 ### Vercel
 
-Set `vitehub.preset` to `vercel` in `nuxt.config.ts` and configure an explicit email driver such as Resend. ViteHub derives the Vercel Schedule and Workflow output from the preset, so those options remain `true`. Connect an Upstash Redis integration so Vercel injects `KV_REST_API_URL` and `KV_REST_API_TOKEN`, then add `RESEND_API_KEY` and the common recap variables before deploying through Git or the Vercel CLI.
+The configuration selects Vercel and Resend automatically when Vercel sets `VERCEL`. Connect an Upstash Redis integration so Vercel injects `KV_REST_API_URL` and `KV_REST_API_TOKEN`, then add `RESEND_API_KEY` and the common recap variables before deploying through Git or the Vercel CLI.
 
 See [ViteHub on Vercel](https://vitehub.dev/docs/frameworks-hosts/vercel).
 

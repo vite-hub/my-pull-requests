@@ -1,5 +1,5 @@
 diff --git a/dist/vite.js b/dist/vite.js
-index f5b5977380ffd9d07a722f383fbc16a94e56dd65..0c8ed26389fcfdf146335bf7e3bd797aa757030b 100644
+index f5b5977380ffd9d07a722f383fbc16a94e56dd65..ec7d0f2fb52c7561f2ecc8fb842ada8f2689defb 100644
 --- a/dist/vite.js
 +++ b/dist/vite.js
 @@ -1647,10 +1647,10 @@ async function withVercelWorkflowPackageLink(rootDir, run) {
@@ -42,10 +42,10 @@ index f5b5977380ffd9d07a722f383fbc16a94e56dd65..0c8ed26389fcfdf146335bf7e3bd797a
 +			const implementation = `${workflowExport}Step${index}Implementation`;
 +			const name = `${workflowExport}Step${index}`;
 +			imports.push(`import ${implementation} from ${JSON.stringify(createImportPath(nativeFile, step))}`);
-+			workflows.push(`async function ${name}(input) {\n  \"use step\"\n  return await ${implementation}(input)\n}`);
++			workflows.push(`async function ${name}(input) {\n  "use step"\n  return await ${implementation}(input)\n}`);
 +			return name;
 +		});
-+		workflows.push(`export async function ${workflowExport}(context) {\n  \"use workflow\"\n  let value = context.payload\n${stepNames.map((name) => `  value = await ${name}(value)`).join("\n")}\n  return value\n}`);
++		workflows.push(`export async function ${workflowExport}(context) {\n  "use workflow"\n  let value = context.payload\n${stepNames.map((name) => `  value = await ${name}(value)`).join("\n")}\n  return value\n}`);
 +	}
 +	return [...imports, imports.length ? "" : "", ...workflows, ""].join("\n");
 +}
@@ -123,3 +123,6 @@ index f5b5977380ffd9d07a722f383fbc16a94e56dd65..0c8ed26389fcfdf146335bf7e3bd797a
  	};
  	if (workflowTransformPlugin && options.importBase) await withVercelWorkflowPackageLink(options.rootDir, writeOutputs);
  	else await writeOutputs();
+@@ -2258 +2288 @@ function hubWorkflow(options) {
+-				rootDir: resolved.root,
++				rootDir: resolveViteHubProjectRoot(resolved.root),
