@@ -1,5 +1,5 @@
 diff --git a/dist/vite.js b/dist/vite.js
-index f5b5977380ffd9d07a722f383fbc16a94e56dd65..ec7d0f2fb52c7561f2ecc8fb842ada8f2689defb 100644
+index f5b5977380ffd9d07a722f383fbc16a94e56dd65..4cb441ba0a966b033e2111acee5e7f97e738cb16 100644
 --- a/dist/vite.js
 +++ b/dist/vite.js
 @@ -1647,10 +1647,10 @@ async function withVercelWorkflowPackageLink(rootDir, run) {
@@ -58,7 +58,7 @@ index f5b5977380ffd9d07a722f383fbc16a94e56dd65..ec7d0f2fb52c7561f2ecc8fb842ada8f
  	const hasIndex = /\.(?:c|m)?[jt]s$/i.test(definition.handler);
  	const indexImport = hasIndex ? `const index = await ${renderRegistryImport(registryFile, definition.handler)}` : "";
 +	const nativeExport = getGeneratedVercelWorkflowExport(definition);
-+	const nativeImport = nativeExport && vercelNativeFile ? `const native = (await ${renderRegistryImport(registryFile, vercelNativeFile)}).${nativeExport}` : "";
++	const nativeImport = nativeExport && vercelNativeFile ? `const native = (await ${renderRegistryImport(registryFile, vercelNativeFile)}).${nativeExport}\n    native.workflowId ||= ${JSON.stringify(`workflow//./.vitehub/workflow/vercel-native//${nativeExport}`)}` : "";
  	const handler = hasIndex ? `index.default?.handler ? index.default : takeInlineWorkflowDefinitionForModule(${JSON.stringify(definition.name)}, index) || { handler: index.default }` : "{ handler: async (context) => { let value = context.payload; for (const step of Object.values(context.steps || {})) value = await step(value); return value } }";
  	return [
  		`  ${JSON.stringify(definition.name)}: async () => {`,
