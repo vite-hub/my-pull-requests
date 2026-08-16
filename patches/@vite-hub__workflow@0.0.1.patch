@@ -123,6 +123,12 @@ index f5b5977380ffd9d07a722f383fbc16a94e56dd65..ec7d0f2fb52c7561f2ecc8fb842ada8f
  	};
  	if (workflowTransformPlugin && options.importBase) await withVercelWorkflowPackageLink(options.rootDir, writeOutputs);
  	else await writeOutputs();
-@@ -2258 +2288 @@ function hubWorkflow(options) {
+@@ -2255,7 +2285,7 @@ function hubWorkflow(options) {
+ 					cloudflare: providerRuntimeImportAliases("cloudflare"),
+ 					vercel: providerRuntimeImportAliases("vercel")
+ 				},
 -				rootDir: resolved.root,
 +				rootDir: resolveViteHubProjectRoot(resolved.root),
+ 				serverDirs,
+ 				serverFunctionName: resolveNitroVercelFunctionName(resolved, "workflow"),
+ 				includeUserAppEntry: internalOptions?.includeUserAppEntry,
