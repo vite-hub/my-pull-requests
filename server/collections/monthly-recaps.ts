@@ -1,7 +1,7 @@
 import { defineCollection, defineSource } from 'vite-hub/source'
 
 import { createGitHubClient } from '../utils/github-client'
-import { buildMonthlyRecap, getMonthRange } from '../utils/monthly-recap'
+import { assertCompleteSearchResults, buildMonthlyRecap, getMonthRange } from '../utils/monthly-recap'
 
 type SearchItem = Awaited<ReturnType<ReturnType<typeof createGitHubClient>['rest']['search']['issuesAndPullRequests']>>['data']['items'][number]
 
@@ -13,6 +13,7 @@ async function search(github: ReturnType<typeof createGitHubClient>, query: stri
   const items: SearchItem[] = []
   let total = 0
   for await (const response of github.paginate.iterator(github.rest.search.issuesAndPullRequests, { per_page: 100, q: query })) {
+    assertCompleteSearchResults(response, query)
     total = response.data.total_count
     items.push(...response.data)
   }

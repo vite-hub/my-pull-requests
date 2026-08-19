@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { buildMonthlyRecap, getMonthRange, getPreviousMonth } from '../server/utils/monthly-recap.ts'
+import { assertCompleteSearchResults, buildMonthlyRecap, getMonthRange, getPreviousMonth } from '../server/utils/monthly-recap.ts'
 
 test('builds calendar totals and busiest moments', () => {
   const recap = buildMonthlyRecap({
@@ -31,4 +31,16 @@ test('uses UTC month boundaries', () => {
     startDate: '2024-02-01',
   })
   assert.throws(() => getMonthRange('2024-13'), /YYYY-MM/)
+})
+
+test('rejects incomplete or capped GitHub search pages', () => {
+  assert.doesNotThrow(() => assertCompleteSearchResults({ data: { total_count: 1000 } }, 'ok'))
+  assert.throws(
+    () => assertCompleteSearchResults({ data: { incomplete_results: true, total_count: 1 } }, 'partial'),
+    /incomplete search results/,
+  )
+  assert.throws(
+    () => assertCompleteSearchResults({ data: { total_count: 1001 } }, 'too much'),
+    /capped at 1000/,
+  )
 })

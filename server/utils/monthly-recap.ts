@@ -14,6 +14,11 @@ export function getMonthRange(month: string) {
   }
 }
 
+export function assertCompleteSearchResults(response: { data: { incomplete_results?: boolean, total_count: number } }, query: string) {
+  if (response.data.incomplete_results) throw new Error(`GitHub returned incomplete search results for: ${query}`)
+  if (response.data.total_count > 1000) throw new Error(`GitHub search is capped at 1000 results for: ${query}`)
+}
+
 export function buildMonthlyRecap({ events, metrics, month, user }: {
   events: Array<{ at: string, kind: 'completed' | 'opened', repo: string }>
   metrics: MonthlyRecap['metrics']
