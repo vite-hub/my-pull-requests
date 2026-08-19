@@ -1,7 +1,7 @@
 name = "my-pull-requests"
 main = ".output/server/index.mjs"
 compatibility_date = "2026-08-14"
-compatibility_flags = ["nodejs_compat", "no_websocket_standard_binary_type"]
+compatibility_flags = ["nodejs_compat"]
 
 [browser]
 binding = "BROWSER"

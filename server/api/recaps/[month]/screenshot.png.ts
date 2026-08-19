@@ -1,7 +1,28 @@
-import { runBrowser } from 'vite-hub/browser'
+import type { H3Event } from 'h3'
 import { createError, defineEventHandler, getRequestURL, getRouterParam } from 'h3'
 
-const monthlyRecapImageBrowser = String('monthly-recap-image')
+type BrowserRun = {
+  quickAction: (action: 'content', options: { url: string }) => Promise<Response>
+}
+
+type CloudflareRequest = Request & {
+  runtime?: {
+    cloudflare?: {
+      env?: {
+        BROWSER?: BrowserRun
+      }
+    }
+  }
+}
+
+function getBrowserBinding(event: H3Event) {
+  return (event.node?.req as unknown as CloudflareRequest | undefined)?.runtime?.cloudflare?.env?.BROWSER
+}
+
+function findOgImage(html: string) {
+  const match = html.match(/<meta\b(?=[^>]*\bproperty=["']og:image["'])(?=[^>]*\bcontent=["']([^"']+)["'])[^>]*>/i)
+  return match?.[1]?.replaceAll('&amp;', '&')
+}
 
 export default defineEventHandler(async (event) => {
   const month = getRouterParam(event, 'month')
@@ -9,15 +30,25 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Month must use YYYY-MM' })
   }
 
-  const [error, imageUrl] = await runBrowser(monthlyRecapImageBrowser, {
-    url: new URL(`/recap/${month}`, getRequestURL(event).origin).toString(),
-  })
-  if (error) throw createError({ statusCode: 502, message: error.message })
-  if (typeof imageUrl !== 'string') {
-    throw createError({ statusCode: 502, message: 'Monthly recap image URL was not returned' })
+  const browserBinding = getBrowserBinding(event)
+  if (!browserBinding) {
+    throw createError({ statusCode: 501, message: 'Cloudflare Browser binding BROWSER is not configured' })
   }
 
-  const image = await fetch(imageUrl)
+  const recapUrl = new URL(`/recap/${month}`, getRequestURL(event).origin)
+  const page = await browserBinding.quickAction('content', {
+    url: recapUrl.toString(),
+  })
+  if (!page.ok) {
+    throw createError({ statusCode: 502, message: `Could not render monthly recap page: ${page.status}` })
+  }
+
+  const imageUrl = findOgImage(await page.text())
+  if (!imageUrl) {
+    throw createError({ statusCode: 502, message: 'Monthly recap page did not render an og:image URL' })
+  }
+
+  const image = await fetch(new URL(imageUrl, recapUrl).toString())
   if (!image.ok) {
     throw createError({ statusCode: 502, message: `Could not download monthly recap image: ${image.status}` })
   }
