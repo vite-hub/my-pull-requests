@@ -1,9 +1,5 @@
-import { env } from 'cloudflare:workers'
+import { runBrowserContent } from 'vite-hub/browser/actions'
 import { createError, defineEventHandler, getRequestURL, getRouterParam } from 'h3'
-
-type BrowserRun = {
-  quickAction: (action: 'content', options: { url: string }) => Promise<Response>
-}
 
 function findOgImage(html: string) {
   const match = html.match(/<meta\b(?=[^>]*\bproperty=["']og:image["'])(?=[^>]*\bcontent=["']([^"']+)["'])[^>]*>/i)
@@ -16,20 +12,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Month must use YYYY-MM' })
   }
 
-  const browserBinding = (env as { BROWSER?: BrowserRun }).BROWSER
-  if (!browserBinding) {
-    throw createError({ statusCode: 501, message: 'Cloudflare Browser binding BROWSER is not configured' })
-  }
-
   const recapUrl = new URL(`/recap/${month}`, getRequestURL(event).origin)
-  const page = await browserBinding.quickAction('content', {
+  const [pageError, html] = await runBrowserContent({
     url: recapUrl.toString(),
   })
-  if (!page.ok) {
-    throw createError({ statusCode: 502, message: `Could not render monthly recap page: ${page.status}` })
+  if (pageError) {
+    throw createError({ statusCode: 502, message: pageError.message })
   }
 
-  const imageUrl = findOgImage(await page.text())
+  const imageUrl = findOgImage(html)
   if (!imageUrl) {
     throw createError({ statusCode: 502, message: 'Monthly recap page did not render an og:image URL' })
   }
