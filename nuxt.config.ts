@@ -39,7 +39,6 @@ export default defineNuxtConfig({
     name: 'my-pull-requests',
     preset: process.env.VERCEL ? 'vercel' : 'cloudflare',
     kv: true,
-    browser: process.env.VERCEL ? false : true,
     schedule: true,
     workflow: true,
     email: process.env.VERCEL ? { driver: 'unemail/driver/resend' } : true,
