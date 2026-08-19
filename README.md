@@ -78,7 +78,7 @@ ViteHub keeps the application code portable across hosts. The repository default
 
 ### Cloudflare Workers
 
-Cloudflare is the default target. Create a KV namespace, enable Email Service for your sending domain, and enable Browser Run. Bind them as `KV`, `EMAIL`, and `BROWSER`. `email: true` selects Cloudflare Email automatically, and `/api/recaps/:month/screenshot.png` uses Browser Run Quick Actions to capture the visual recap as a PNG.
+Cloudflare is the default target. Create a KV namespace, enable Email Service for your sending domain, and enable Browser Run. Bind them as `KV`, `EMAIL`, and `BROWSER`. `email: true` selects Cloudflare Email automatically, and `/api/recaps/:month/screenshot.png` uses ViteHub Browser to resolve and download the generated recap PNG.
 
 Set `NUXT_GITHUB_TOKEN`, `RECAP_FROM`, `RECAP_SITE_URL`, and `RECAP_TO` in the Worker environment, then deploy the generated Worker:
 

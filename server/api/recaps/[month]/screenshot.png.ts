@@ -1,33 +1,7 @@
-import type { H3Event } from 'h3'
+import { runBrowser } from 'vite-hub/browser'
 import { createError, defineEventHandler, getRequestURL, getRouterParam } from 'h3'
 
-type BrowserRun = {
-  quickAction: (action: 'screenshot', options: {
-    url: string
-    viewport?: {
-      width: number
-      height: number
-      deviceScaleFactor?: number
-    }
-    screenshotOptions?: {
-      type?: 'png' | 'jpeg'
-    }
-  }) => Promise<Response>
-}
-
-type CloudflareRequest = Request & {
-  runtime?: {
-    cloudflare?: {
-      env?: {
-        BROWSER?: BrowserRun
-      }
-    }
-  }
-}
-
-function getBrowserBinding(event: H3Event) {
-  return (event.node?.req as unknown as CloudflareRequest | undefined)?.runtime?.cloudflare?.env?.BROWSER
-}
+const monthlyRecapImageBrowser = String('monthly-recap-image')
 
 export default defineEventHandler(async (event) => {
   const month = getRouterParam(event, 'month')
@@ -35,20 +9,22 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Month must use YYYY-MM' })
   }
 
-  const browserBinding = getBrowserBinding(event)
-  if (!browserBinding) {
-    throw createError({ statusCode: 501, message: 'Cloudflare Browser binding BROWSER is not configured' })
+  const [error, imageUrl] = await runBrowser(monthlyRecapImageBrowser, {
+    url: new URL(`/recap/${month}`, getRequestURL(event).origin).toString(),
+  })
+  if (error) throw createError({ statusCode: 502, message: error.message })
+  if (typeof imageUrl !== 'string') {
+    throw createError({ statusCode: 502, message: 'Monthly recap image URL was not returned' })
   }
 
-  const screenshot = await browserBinding.quickAction('screenshot', {
-    url: new URL(`/recap/${month}?capture=1`, getRequestURL(event).origin).toString(),
-    viewport: { width: 1200, height: 630, deviceScaleFactor: 2 },
-    screenshotOptions: { type: 'png' },
-  })
+  const image = await fetch(imageUrl)
+  if (!image.ok) {
+    throw createError({ statusCode: 502, message: `Could not download monthly recap image: ${image.status}` })
+  }
 
-  return new Response(screenshot.body, {
+  return new Response(image.body, {
     headers: {
-      'content-type': 'image/png',
+      'content-type': image.headers.get('content-type') || 'image/png',
       'cache-control': 'public, max-age=300, s-maxage=300',
     },
   })

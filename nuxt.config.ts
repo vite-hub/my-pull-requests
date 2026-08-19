@@ -41,6 +41,7 @@ export default defineNuxtConfig({
     kv: true,
     schedule: true,
     workflow: true,
+    browser: process.env.VERCEL ? false : true,
     email: process.env.VERCEL ? { driver: 'unemail/driver/resend' } : true,
     env: {
       server: {

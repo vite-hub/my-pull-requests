@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const toast = useToast()
 const month = String(useRoute().params.month)
-const isCapture = useRoute().query.capture === '1'
 const shareUrl = useRequestURL().href
 const { data: recap, error } = await useFetch<MonthlyRecap>(`/api/recaps/${month}`, {
   key: `monthly-recap-${month}`,
@@ -77,7 +76,7 @@ defineOgImage('MonthlyRecap', {
           />
           <h1>{{ recapData.user.name }} shipped.</h1>
         </div>
-        <div v-if="!isCapture" class="recap-actions">
+        <div class="recap-actions">
           <time :datetime="recapData.month" class="recap-date">{{ recapData.label }}</time>
           <UButton
             icon="i-lucide-share-2"
