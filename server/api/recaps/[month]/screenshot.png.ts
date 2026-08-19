@@ -1,22 +1,8 @@
-import type { H3Event } from 'h3'
+import { env } from 'cloudflare:workers'
 import { createError, defineEventHandler, getRequestURL, getRouterParam } from 'h3'
 
 type BrowserRun = {
   quickAction: (action: 'content', options: { url: string }) => Promise<Response>
-}
-
-type CloudflareRequest = Request & {
-  runtime?: {
-    cloudflare?: {
-      env?: {
-        BROWSER?: BrowserRun
-      }
-    }
-  }
-}
-
-function getBrowserBinding(event: H3Event) {
-  return (event.node?.req as unknown as CloudflareRequest | undefined)?.runtime?.cloudflare?.env?.BROWSER
 }
 
 function findOgImage(html: string) {
@@ -30,7 +16,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Month must use YYYY-MM' })
   }
 
-  const browserBinding = getBrowserBinding(event)
+  const browserBinding = (env as { BROWSER?: BrowserRun }).BROWSER
   if (!browserBinding) {
     throw createError({ statusCode: 501, message: 'Cloudflare Browser binding BROWSER is not configured' })
   }
