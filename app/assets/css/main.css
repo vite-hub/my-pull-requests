@@ -1,0 +1,52 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@layer base {
+  :root {
+    --app-canvas: #f1f0ed;
+    --app-pattern: #dfddd7;
+    --ui-bg: #fffefa;
+    --ui-bg-accented: #e8e6e0;
+    --ui-bg-elevated: #f5f3ef;
+    --ui-bg-inverted: #2b2a27;
+    --ui-bg-muted: #f5f3ef;
+    --ui-border: #dddcd6;
+    --ui-border-accented: #c9c7c1;
+    --ui-border-muted: #e8e6e0;
+    --ui-container: 80rem;
+    --ui-radius: .5rem;
+    --ui-text: #44413c;
+    --ui-text-dimmed: #9b978f;
+    --ui-text-highlighted: #1d1c1a;
+    --ui-text-inverted: #fffefa;
+    --ui-text-muted: #6e6b65;
+    --ui-text-toned: #55524c;
+    color-scheme: light;
+  }
+
+  .dark {
+    --app-canvas: #171614;
+    --app-pattern: #3a3833;
+    --ui-bg: #201f1c;
+    --ui-bg-accented: #3a3833;
+    --ui-bg-elevated: #292722;
+    --ui-bg-inverted: #f0eee8;
+    --ui-bg-muted: #292722;
+    --ui-border: #3a3833;
+    --ui-border-accented: #514e47;
+    --ui-border-muted: #302f2a;
+    --ui-text: #d7d3ca;
+    --ui-text-dimmed: #77736b;
+    --ui-text-highlighted: #f0eee8;
+    --ui-text-inverted: #1d1c1a;
+    --ui-text-muted: #aaa69e;
+    --ui-text-toned: #c2beb5;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--app-canvas);
+    color: var(--ui-text);
+    min-height: 100vh;
+  }
+}

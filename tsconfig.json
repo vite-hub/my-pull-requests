@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "#vitehub/emails/*": ["./.vitehub/email/templates/*"],
+      "#vitehub/env/server": ["./.vitehub/env/server.mjs"]
+    }
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./.nuxt/tsconfig.app.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.server.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.shared.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.node.json"
+    }
+  ]
+}

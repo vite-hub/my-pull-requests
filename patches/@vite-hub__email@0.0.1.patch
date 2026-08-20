@@ -1,0 +1,23 @@
+diff --git a/dist/vite.js b/dist/vite.js
+index 7d07a76e189a705c3cc50284c51a1501acb9f8ef..1835e026a0a4c096d430e15d141f439ebcffeee7 100644
+--- a/dist/vite.js
++++ b/dist/vite.js
+@@ -274,12 +274,12 @@ async function bundleEsmEntry(entryFile, outfile, options = {}) {
+ 	await build({
+ 		alias: aliases,
+ 		banner: options.banner || format === "esm" && platform === "node" ? { js: [options.banner, ...format === "esm" && platform === "node" ? [
+-			"import { createRequire as __createRequire } from \"node:module\";",
+-			"import { dirname as __vitehubDirname } from \"node:path\";",
+-			"import { fileURLToPath as __vitehubFileURLToPath } from \"node:url\";",
+-			"globalThis.require = __createRequire(import.meta.url);",
+-			"globalThis.__filename = __vitehubFileURLToPath(import.meta.url);",
+-			"globalThis.__dirname = __vitehubDirname(globalThis.__filename);"
++			"import { createRequire as __vitehubEmailCreateRequire } from \"node:module\";",
++			"import { dirname as __vitehubEmailDirname } from \"node:path\";",
++			"import { fileURLToPath as __vitehubEmailFileURLToPath } from \"node:url\";",
++			"globalThis.require = __vitehubEmailCreateRequire(import.meta.url);",
++			"globalThis.__filename = __vitehubEmailFileURLToPath(import.meta.url);",
++			"globalThis.__dirname = __vitehubEmailDirname(globalThis.__filename);"
+ 		] : []].filter(Boolean).join("\n") } : void 0,
+ 		bundle: true,
+ 		conditions: options.conditions ?? (platform === "node" ? ["node"] : void 0),

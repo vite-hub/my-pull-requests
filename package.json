@@ -1,0 +1,45 @@
+{
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "postinstall": "nuxt prepare",
+    "preview": "nuxt preview",
+    "lint": "eslint .",
+    "test": "node --test tests/*.test.ts",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@github-tools/sdk": "^1.11.1",
+    "@iconify-json/lucide": "^1.2.68",
+    "@iconify-json/simple-icons": "^1.2.52",
+    "@nuxt/ui": "^4.10.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "@resvg/resvg-wasm": "^2.6.2",
+    "@upstash/redis": "^1.38.2",
+    "@vueuse/nuxt": "^14.4.0",
+    "feed": "^5.1.0",
+    "h3": "^2.0.1-rc.26",
+    "nuxt-og-image": "^6.7.8",
+    "satori": "^0.29.0",
+    "tailwindcss": "^4.3.3",
+    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@bb473ef9edcd20688bf26c75661944e06dbb051e",
+    "vue": "^3.5.40",
+    "vue-router": "^5.2.0"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.16.0",
+    "eslint": "^10.8.0",
+    "nitro": "3.0.260610-beta",
+    "nuxt": "npm:nuxt-nightly@5.0.0-29776765.204647f9",
+    "nuxt-skill-hub": "0.1.1",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.9",
+    "wrangler": "^4.123.0"
+  }
+}
