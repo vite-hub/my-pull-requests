@@ -17,11 +17,11 @@ ignoredBuiltDependencies:
   - '@vercel/speed-insights'
 
 minimumReleaseAgeExclude:
-  - '@nuxt/kit-nightly@5.0.0-29776765.204647f9'
-  - '@nuxt/nitro-server-nightly@5.0.0-29776765.204647f9'
-  - '@nuxt/schema-nightly@5.0.0-29776765.204647f9'
-  - '@nuxt/vite-builder-nightly@5.0.0-29776765.204647f9'
-  - nuxt-nightly@5.0.0-29776765.204647f9
+  - '@nuxt/kit-nightly@5.0.0-29788537.bc41aa9c'
+  - '@nuxt/nitro-server-nightly@5.0.0-29788537.bc41aa9c'
+  - '@nuxt/schema-nightly@5.0.0-29788537.bc41aa9c'
+  - '@nuxt/vite-builder-nightly@5.0.0-29788537.bc41aa9c'
+  - nuxt-nightly@5.0.0-29788537.bc41aa9c
   - unrouting@0.2.3
   - '@chat-adapter/shared@4.38.0'
   - '@chat-adapter/telegram@4.38.0'
