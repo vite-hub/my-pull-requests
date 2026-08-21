@@ -23,10 +23,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-08-14',
 
   nitro: {
-    preset: process.env.VERCEL ? 'vercel' : 'cloudflare-module',
-    wasm: {
-      lazy: true,
-    },
     cloudflare: {
       wrangler: {
         observability: {
