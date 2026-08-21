@@ -28,7 +28,7 @@
     "nuxt-og-image": "^6.7.8",
     "satori": "^0.29.0",
     "tailwindcss": "^4.3.3",
-    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@68c6b9d15d296a870a7cb5215643887a814ffab0",
+    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@189db83b759878832cdcde410d98789e478a8fbc",
     "vue": "^3.5.40",
     "vue-router": "^5.2.0"
   },
