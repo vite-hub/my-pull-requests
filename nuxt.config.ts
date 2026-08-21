@@ -22,6 +22,23 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   compatibilityDate: '2026-08-14',
 
+  nitro: {
+    cloudflare: {
+      wrangler: {
+        observability: {
+          enabled: true,
+          logs: {
+            enabled: true,
+            invocation_logs: true,
+          },
+          traces: {
+            enabled: true,
+          },
+        },
+      },
+    },
+  },
+
   eslint: {
     config: {
       stylistic: {
