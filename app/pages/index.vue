@@ -1,12 +1,14 @@
 <script setup lang="ts">
+import { HTTPError } from 'h3'
+
 const { data: activity, error: activityError } = await useFetch('/api/activity', { key: 'github-activity' })
 
 if (activityError.value) {
-  throw createError(activityError.value)
+  throw activityError.value
 }
 
 if (!activity.value) {
-  throw createError('Could not load User activity')
+  throw new HTTPError({ status: 500, statusText: 'Internal Server Error', message: 'Could not load user activity' })
 }
 
 const { user, prs } = activity.value.contributions

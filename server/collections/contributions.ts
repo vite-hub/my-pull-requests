@@ -1,4 +1,4 @@
-import { createError } from 'h3'
+import { HTTPError } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
 import { defineCollection, defineSource } from 'vite-hub/source'
 
@@ -136,10 +136,10 @@ const getRecentGitHubContributions = defineCachedFunction(async () => {
   }
   catch (error) {
     const status = getGitHubStatus(error)
-    if (status === 401) throw createError({ statusCode: 401, message: 'GitHub token invalid/expired' })
-    if (status === 429) throw createError({ statusCode: 429, message: 'GitHub rate limit exceeded' })
-    if (status === 403) throw createError({ statusCode: 403, message: 'GitHub API forbidden' })
-    if (status) throw createError({ statusCode: 502, message: 'Failed to fetch GitHub activity' })
+    if (status === 401) throw new HTTPError({ status: 401, statusText: 'Unauthorized', message: 'GitHub token invalid/expired' })
+    if (status === 429) throw new HTTPError({ status: 429, statusText: 'Too Many Requests', message: 'GitHub rate limit exceeded' })
+    if (status === 403) throw new HTTPError({ status: 403, statusText: 'Forbidden', message: 'GitHub API forbidden' })
+    if (status) throw new HTTPError({ status: 502, statusText: 'Bad Gateway', message: 'Failed to fetch GitHub activity' })
     throw error
   }
 }, {

@@ -1,9 +1,9 @@
 import { Feed } from 'feed'
-import { appendHeader, defineEventHandler, getRequestURL } from 'h3'
+import { defineHandler, getRequestURL } from 'h3'
 
 import { contributions } from '../collections/contributions'
 
-export default defineEventHandler(async (event) => {
+export default defineHandler(async (event) => {
   const domain = getRequestURL(event).origin
   const { user, prs } = (await contributions.get(['github', 'recent'])).contributions
   const favicon = new URL('/favicon.png', domain).href
@@ -31,6 +31,6 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  appendHeader(event, 'Content-Type', 'application/xml')
+  event.res.headers.set('Content-Type', 'application/xml')
   return feed.rss2()
 })

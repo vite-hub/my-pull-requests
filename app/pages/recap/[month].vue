@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { HTTPError } from 'h3'
+
 const toast = useToast()
 const month = String(useRoute().params.month)
 const shareUrl = useRequestURL().href
@@ -7,9 +9,9 @@ const { data: recap, error } = await useFetch<MonthlyRecap>(`/api/recaps/${month
 })
 
 if (error.value) {
-  throw createError(error.value)
+  throw error.value
 }
-if (!recap.value) throw createError({ statusCode: 404, message: 'Monthly recap not found' })
+if (!recap.value) throw new HTTPError({ status: 404, statusText: 'Not Found', message: 'Monthly recap not found' })
 
 const recapData = recap.value
 const totalCompleted = recapData.metrics.mergedPullRequests + recapData.metrics.closedIssues

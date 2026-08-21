@@ -1,5 +1,5 @@
-import { defineEventHandler } from 'h3'
+import { defineHandler } from 'h3'
 
 import { contributions } from '../collections/contributions'
 
-export default defineEventHandler(() => contributions.get(['github', 'recent']))
+export default defineHandler(() => contributions.get(['github', 'recent']))
