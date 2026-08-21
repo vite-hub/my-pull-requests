@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { getGitHubStatus, normalizeGitHubActivity } from '../server/collections/contributions.ts'
+import { getGitHubStatus, normalizeGitHubActivity } from '../server/utils/github-activity.ts'
 
 const publicRepo = {
   isPrivate: false,
