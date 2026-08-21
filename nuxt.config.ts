@@ -23,6 +23,9 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-08-14',
 
   nitro: {
+    wasm: {
+      lazy: true,
+    },
     cloudflare: {
       wrangler: {
         observability: {
