@@ -1,4 +1,4 @@
-import { defineCollection, defineSource } from 'vite-hub/source'
+import { combineSources, defineSource } from 'vite-hub/source'
 
 import { createGitHubClient } from '../utils/github-client'
 import { assertCompleteSearchResults, buildMonthlyRecap, getMonthRange } from '../utils/monthly-recap'
@@ -57,7 +57,7 @@ async function fetchGitHubMonthlyRecap(month: string) {
   })
 }
 
-export const monthlyRecaps = defineCollection({
+export const monthlyRecaps = combineSources({
   sources: {
     github: defineSource({ get: fetchGitHubMonthlyRecap }),
   },

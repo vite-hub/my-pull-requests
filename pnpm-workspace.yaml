@@ -26,3 +26,6 @@ minimumReleaseAgeExclude:
   - '@chat-adapter/shared@4.38.0'
   - '@chat-adapter/telegram@4.38.0'
   - chat@4.38.0
+
+overrides:
+  '@vite-hub/source': 'https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@edd4d74200670d7011b0a39dc7771c6a9ab651a9'

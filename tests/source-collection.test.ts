@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { createSource, defineCollection, defineSource } from 'vite-hub/source'
+import { combineSources, createSource, defineSource } from 'vite-hub/source'
 
 function enumerable<const TKey extends string, TData>(key: TKey, data: TData) {
   return {
@@ -15,7 +15,7 @@ function enumerable<const TKey extends string, TData>(key: TKey, data: TData) {
 }
 
 test('keeps equal Source keys distinct by alias', async () => {
-  const collection = defineCollection({
+  const collection = combineSources({
     sources: {
       first: enumerable('same', 1),
       second: enumerable('same', 2),
@@ -36,10 +36,10 @@ test('gets keyed Sources without requiring enumeration', async () => {
     },
   }))
   const keyed = createSource(definition, { rootDir: '/recaps' })
-  const collection = defineCollection({ sources: { keyed } })
+  const collection = combineSources({ sources: { keyed } })
 
   assert.equal(await collection.get(['keyed', 'july']), '/recaps:JULY')
-  await assert.rejects(collection.items(), /source alias "keyed" is not enumerable/)
-  await assert.rejects(collection.get(['missing' as 'keyed', 'july']), /source alias "missing" is not defined/)
-  await assert.rejects(collection.get('keyed:july' as never), /identity must be a \[source, key\] string tuple/)
+  await assert.rejects(collection.items(), /Combined Source alias "keyed" is not enumerable/)
+  await assert.rejects(collection.get(['missing' as 'keyed', 'july']), /Combined Source alias "missing" is not defined/)
+  await assert.rejects(collection.get('keyed:july' as never), /Combined Source identity must be a \[source, key\] string tuple/)
 })

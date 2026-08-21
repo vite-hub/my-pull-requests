@@ -1,6 +1,6 @@
 import { HTTPError } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
-import { defineCollection, defineSource } from 'vite-hub/source'
+import { combineSources, defineSource } from 'vite-hub/source'
 
 import { getGitHubStatus, normalizeGitHubActivity, type GitHubActivity } from '../utils/github-activity'
 import { createGitHubClient } from '../utils/github-client'
@@ -75,7 +75,7 @@ const getRecentGitHubContributions = defineCachedFunction(async () => {
   swr: false,
 })
 
-export const contributions = defineCollection({
+export const contributions = combineSources({
   sources: {
     github: defineSource({
       get: (_range: 'recent') => getRecentGitHubContributions(),
