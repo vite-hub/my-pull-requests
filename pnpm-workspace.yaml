@@ -28,4 +28,4 @@ minimumReleaseAgeExclude:
   - chat@4.38.0
 
 overrides:
-  '@vite-hub/source': 'https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@9cb96c152b829bf1db8c6db5a024d84193f49492'
+  '@vite-hub/source': 'https://pkg.pr.new/vite-hub/vitehub/@vite-hub/source@a612a4894461de04d34c72a229bb6e531410e8b9'
