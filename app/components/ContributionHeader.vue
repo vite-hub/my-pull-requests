@@ -17,17 +17,29 @@ defineSlots<{
 <template>
   <header class="contribution-header">
     <div class="contribution-header__intro">
-      <a
-        href="https://vitehub.dev"
-        class="contribution-header__built-with"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <svg viewBox="0 0 20 18" aria-hidden="true">
-          <path d="M19.734 8.156 15.576.844A1.66 1.66 0 0 0 14.135 0H5.819C5.226 0 4.677.32 4.38.844L.222 8.156a1.71 1.71 0 0 0 0 1.688l4.158 7.312c.297.523.846.844 1.439.844h8.316c.593 0 1.142-.32 1.438-.844l4.158-7.312c.3-.523.3-1.165.003-1.688Z" />
-        </svg>
-        <span>Built with <strong>vitehub.dev</strong></span>
-      </a>
+      <div class="contribution-header__meta">
+        <a
+          href="https://vitehub.dev"
+          class="contribution-header__built-with"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <svg viewBox="0 0 20 18" aria-hidden="true">
+            <path d="M19.734 8.156 15.576.844A1.66 1.66 0 0 0 14.135 0H5.819C5.226 0 4.677.32 4.38.844L.222 8.156a1.71 1.71 0 0 0 0 1.688l4.158 7.312c.297.523.846.844 1.439.844h8.316c.593 0 1.142-.32 1.438-.844l4.158-7.312c.3-.523.3-1.165.003-1.688Z" />
+          </svg>
+          <span>Built with <strong>vitehub.dev</strong></span>
+        </a>
+
+        <UButton
+          to="https://github.com/vite-hub/my-pull-requests"
+          external
+          target="_blank"
+          label="Fork it"
+          icon="i-lucide-git-fork"
+          color="neutral"
+          variant="subtle"
+        />
+      </div>
 
       <div class="contribution-header__identity">
         <a
@@ -89,13 +101,20 @@ defineSlots<{
   flex: none;
 }
 
+.contribution-header__meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .625rem;
+  margin-bottom: .875rem;
+}
+
 .contribution-header__built-with {
   align-items: center;
   color: var(--ui-text-muted);
   display: inline-flex;
   font-size: .75rem;
   gap: .375rem;
-  margin-bottom: .875rem;
   text-decoration: none;
 }
 
