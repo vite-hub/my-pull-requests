@@ -1,7 +1,7 @@
 import { Feed } from 'feed'
 import { defineHandler, getRequestURL } from 'h3'
 
-import { contributions } from '../collections/contributions'
+import { contributions } from '../sources/contributions'
 
 export default defineHandler(async (event) => {
   const domain = getRequestURL(event).origin
