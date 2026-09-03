@@ -5,7 +5,7 @@ import { contributions } from '../sources/contributions'
 
 export default defineHandler(async (event) => {
   const domain = getRequestURL(event).origin
-  const { user, prs } = (await contributions.get(['github', 'recent'])).contributions
+  const { user, prs } = (await contributions.get('recent')).contributions
   const favicon = new URL('/favicon.png', domain).href
   const feed = new Feed({
     title: `${user.name} is contributing...`,

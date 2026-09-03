@@ -18,22 +18,12 @@ Every month, get an email with a summary of what you shipped. See my [July 2026 
 
 ## Features
 
-- 🔎 **Browse and sort contributions** across public GitHub repositories
+- 🔎 **Browse and sort contributions** across public GitHub repositories with [Sources](./server/sources)
 - 📰 **Follow new activity** through an RSS feed
-- 📅 **Generate monthly recaps** with totals, trends, and a top repository
-- 🖼️ **Share or email each recap** as a page, image, or message
-
-## Build with ViteHub
-
-- 🔗 **Fetch GitHub activity** with Sources and Collections
-- ⏱️ **Run monthly jobs** with Schedule and Workflow
-- 💾 **Store recaps** with portable KV
-- 📨 **Send Markdown email** through provider adapters
-- 🌍 **Deploy across hosts** with Cloudflare, Vercel, or Node presets
-
-## Stack
-
-[ViteHub](https://vitehub.dev) · Nuxt · Vue · Nuxt UI · Nitro · GitHub API
+- 📅 **Generate monthly recaps** with totals, trends, and a top repository using [Schedule](./server/schedules) and [Workflow](./server/workflows)
+- 🖼️ **Share each recap** as a page or image, or send it with [Email](./server/emails)
+- 💾 **Store generated recaps** with [KV](./server/workflows/monthly-recap/02-store.ts)
+- 🔐 **Load GitHub and email configuration** with [Env](./nuxt.config.ts)
 
 ## Start
 
