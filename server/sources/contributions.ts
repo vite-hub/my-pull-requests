@@ -1,5 +1,5 @@
 import { HTTPError } from 'h3'
-import { defineSource } from 'vite-hub/source/server'
+import { defineCachedFunction } from 'nitro/cache'
 
 import { getGitHubStatus, normalizeGitHubActivity, type GitHubActivity } from '../utils/github-activity'
 import { createGitHubClient } from '../utils/github-client'
@@ -50,14 +50,8 @@ const GITHUB_ACTIVITY_QUERY = `#graphql
   }
 `
 
-export const contributions = defineSource({
-  cache: {
-    getKey: () => 'activity',
-    maxAge: 60 * 5,
-    name: 'github-activity',
-    swr: false,
-  },
-  async get(_range: 'recent') {
+export const contributions = {
+  get: defineCachedFunction(async (_range: 'recent') => {
     try {
       const github = createGitHubClient()
       const activity = await github.graphql<GitHubActivity>(GITHUB_ACTIVITY_QUERY, {
@@ -74,5 +68,10 @@ export const contributions = defineSource({
       if (status) throw new HTTPError({ status: 502, statusText: 'Bad Gateway', message: 'Failed to fetch GitHub activity' })
       throw error
     }
-  },
-})
+  }, {
+    getKey: () => 'activity',
+    maxAge: 60 * 5,
+    name: 'github-activity',
+    swr: false,
+  }),
+}

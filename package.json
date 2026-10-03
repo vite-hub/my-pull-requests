@@ -11,6 +11,7 @@
     "postinstall": "nuxt prepare",
     "preview": "nuxt preview",
     "lint": "eslint .",
+    "test": "node --experimental-test-module-mocks --test tests/github-getters.test.ts",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
@@ -27,7 +28,7 @@
     "nuxt-og-image": "^6.7.8",
     "satori": "^0.29.0",
     "tailwindcss": "^4.3.3",
-    "vite-hub": "0.0.4",
+    "vite-hub": "https://pkg.pr.new/vite-hub/vitehub/vite-hub@016f1ef5a26920cd38ee252626163bf57be4f494",
     "vue": "^3.5.40",
     "vue-router": "^5.2.0"
   },

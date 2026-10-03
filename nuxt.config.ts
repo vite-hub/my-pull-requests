@@ -58,7 +58,14 @@ export default defineNuxtConfig({
     kv: true,
     schedule: true,
     workflow: true,
-    email: process.env.VERCEL ? { driver: 'unemail/driver/resend' } : true,
+    email: process.env.VERCEL
+      ? {
+          driver: 'resend',
+          options: {
+            apiKey: env({ secret: true, source: env.source('RESEND_API_KEY') }),
+          },
+        }
+      : true,
     env: {
       server: {
         githubToken: env({

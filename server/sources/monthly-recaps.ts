@@ -1,5 +1,3 @@
-import { defineSource } from 'vite-hub/source/server'
-
 import { createGitHubClient } from '../utils/github-client'
 import { assertCompleteSearchResults, buildMonthlyRecap, getMonthRange } from '../utils/monthly-recap'
 
@@ -57,4 +55,4 @@ async function fetchGitHubMonthlyRecap(month: string) {
   })
 }
 
-export const monthlyRecaps = defineSource({ get: fetchGitHubMonthlyRecap })
+export const monthlyRecaps = { get: fetchGitHubMonthlyRecap }
