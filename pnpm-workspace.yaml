@@ -51,3 +51,6 @@ minimumReleaseAgeExclude:
   - '@vite-hub/workspace@0.0.4'
   - devframe@0.9.10
   - vite-hub@0.0.4
+
+patchedDependencies:
+  '@vite-hub/workflow@0.0.4': patches/@vite-hub__workflow@0.0.4.patch
