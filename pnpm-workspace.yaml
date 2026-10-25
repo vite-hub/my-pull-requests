@@ -61,3 +61,6 @@ overrides:
   vite-hub: https://pkg.pr.new/vite-hub/vitehub/vite-hub@b670eaf40de043b93750647c9abf880cc0b12a24
   '@vite-hub/workflow': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workflow@b670eaf40de043b93750647c9abf880cc0b12a24
   '@vite-hub/workspace': https://pkg.pr.new/vite-hub/vitehub/@vite-hub/workspace@b670eaf40de043b93750647c9abf880cc0b12a24
+
+patchedDependencies:
+  '@vite-hub/workflow@0.0.4': patches/@vite-hub__workflow@0.0.4.patch

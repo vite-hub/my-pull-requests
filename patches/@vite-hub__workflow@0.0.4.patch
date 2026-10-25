@@ -1,0 +1,19 @@
+diff --git a/dist/runtime/cloudflare-runner.js b/dist/runtime/cloudflare-runner.js
+--- a/dist/runtime/cloudflare-runner.js
++++ b/dist/runtime/cloudflare-runner.js
+@@ -1,6 +1,6 @@
+ import { t as workflowErrorDiagnostics } from "../error-diagnostics-pwNFvAHP.js";
+ import { t as hasRuntimeType } from "../runtime-type-DBCvIh5x.js";
+-import { i as runWithActiveCloudflareEnv } from "../cloudflare-env-Dk2Zf7ft.js";
++import { a as setActiveCloudflareEnv, i as runWithActiveCloudflareEnv } from "../cloudflare-env-Dk2Zf7ft.js";
+ import { runSerializedWorkflowHandler } from "./execute.js";
+ import { loadWorkflowDefinition, runWithWorkflowRuntimeEvent, setWorkflowRuntimeConfig, setWorkflowRuntimeRegistry } from "./state.js";
+ //#region src/runtime/cloudflare-runner.ts
+@@ -61,6 +61,7 @@
+ async function runCloudflareWorkflow({ config, createNonRetryableError, env, event, name, registry, step }) {
+ 	setWorkflowRuntimeConfig(config);
+ 	setWorkflowRuntimeRegistry(registry);
++	setActiveCloudflareEnv(env);
+ 	let runtimeEvent;
+ 	const providerStep = wrapCloudflareWorkflowStep(step, createNonRetryableError, env, () => runtimeEvent);
+ 	runtimeEvent = {
