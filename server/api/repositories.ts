@@ -2,4 +2,4 @@ import { defineHandler } from 'h3'
 
 import { contributions } from '../sources/contributions'
 
-export default defineHandler(() => contributions.get('recent'))
+export default defineHandler(() => contributions.repositories())

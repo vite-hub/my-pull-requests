@@ -18,7 +18,7 @@ Every month, get an email with a summary of what you shipped. See my [July 2026 
 
 ## Features
 
-- 🔎 **Browse and sort contributions** across public GitHub repositories with [Sources](./server/sources)
+- 🔎 **Browse, filter, and sort contributions** across public GitHub repositories with [Sources](./server/sources). Filter by title words, `is:`, `org:`, `repo:`, and `created:`, then share the URL, for example [`?q=perf org:nuxt is:merged`](https://prs.onmax.me/?q=perf+org:nuxt+is:merged)
 - 📰 **Follow new activity** through an RSS feed
 - 📅 **Generate monthly recaps** with totals, trends, and a top repository using [Schedule](./server/schedules) and [Workflow](./server/workflows)
 - 🖼️ **Share each recap** as a page or image, or send it with [Email](./server/emails)
@@ -46,7 +46,7 @@ NUXT_GITHUB_TOKEN=your-github-token
 pnpm dev
 ```
 
-Monthly email also needs `RECAP_FROM`, `RECAP_TO`, and `RECAP_SITE_URL`.
+Monthly email also needs `RECAP_FROM`, `RECAP_TO`, and `RECAP_SITE_URL`. Recap images need `NUXT_APP_SECRET`, at least 32 characters, to sign their URLs. Generate one with `npx nuxt-og-image generate-secret`.
 
 ## Deploy
 

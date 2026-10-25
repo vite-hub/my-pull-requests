@@ -1,14 +1,15 @@
 diff --git a/dist/runtime/cloudflare-runner.js b/dist/runtime/cloudflare-runner.js
-index 1c175a702b30590bbc413e97840c236edba94d2b..7c3d089a8d018ea084d50e88417a101710e3adcc 100644
 --- a/dist/runtime/cloudflare-runner.js
 +++ b/dist/runtime/cloudflare-runner.js
-@@ -1,4 +1,4 @@
--import { i as runWithActiveCloudflareEnv } from "../cloudflare-env-DjxQNbrx.js";
-+import { a as setActiveCloudflareEnv, i as runWithActiveCloudflareEnv } from "../cloudflare-env-DjxQNbrx.js";
- import { runWorkflowHandler } from "./execute.js";
+@@ -1,6 +1,6 @@
+ import { t as workflowErrorDiagnostics } from "../error-diagnostics-pwNFvAHP.js";
+ import { t as hasRuntimeType } from "../runtime-type-DBCvIh5x.js";
+-import { i as runWithActiveCloudflareEnv } from "../cloudflare-env-Dk2Zf7ft.js";
++import { a as setActiveCloudflareEnv, i as runWithActiveCloudflareEnv } from "../cloudflare-env-Dk2Zf7ft.js";
+ import { runSerializedWorkflowHandler } from "./execute.js";
  import { loadWorkflowDefinition, runWithWorkflowRuntimeEvent, setWorkflowRuntimeConfig, setWorkflowRuntimeRegistry } from "./state.js";
  //#region src/runtime/cloudflare-runner.ts
-@@ -26,6 +26,7 @@ function wrapCloudflareWorkflowStep(step, createNonRetryableError, env, runtimeE
+@@ -61,6 +61,7 @@
  async function runCloudflareWorkflow({ config, createNonRetryableError, env, event, name, registry, step }) {
  	setWorkflowRuntimeConfig(config);
  	setWorkflowRuntimeRegistry(registry);

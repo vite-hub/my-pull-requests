@@ -12,7 +12,8 @@ export default defineNuxtConfig({
 
   $production: {
     routeRules: {
-      '/': { isr: 60 * 5 },
+      // Vercel caches one page per shared filter link.
+      '/': { isr: { expiration: 60 * 5, allowQuery: ['q', 'sort', 'tab'] } },
       '/api/recaps/**': { isr: 60 * 5 },
       '/recap/**': { isr: 60 * 5 },
     },
@@ -58,7 +59,14 @@ export default defineNuxtConfig({
     kv: true,
     schedule: true,
     workflow: true,
-    email: process.env.VERCEL ? { driver: 'unemail/driver/resend' } : true,
+    email: process.env.VERCEL
+      ? {
+          driver: 'resend',
+          options: {
+            apiKey: env({ secret: true, source: env.source('RESEND_API_KEY') }),
+          },
+        }
+      : true,
     env: {
       server: {
         githubToken: env({
