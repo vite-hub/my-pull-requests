@@ -12,7 +12,8 @@ export default defineNuxtConfig({
 
   $production: {
     routeRules: {
-      '/': { isr: 60 * 5 },
+      // Vercel caches one page per shared filter link.
+      '/': { isr: { expiration: 60 * 5, allowQuery: ['q', 'sort', 'tab'] } },
       '/api/recaps/**': { isr: 60 * 5 },
       '/recap/**': { isr: 60 * 5 },
     },

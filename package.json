@@ -11,7 +11,7 @@
     "postinstall": "nuxt prepare",
     "preview": "nuxt preview",
     "lint": "eslint .",
-    "test": "node --experimental-test-module-mocks --test tests/github-getters.test.ts",
+    "test": "node --experimental-test-module-mocks --test tests/activity-query.test.ts tests/github-getters.test.ts",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {

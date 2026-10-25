@@ -5,7 +5,7 @@ import { contributions } from '../sources/contributions'
 
 export default defineHandler(async (event) => {
   const domain = getRequestURL(event).origin
-  const { user, prs } = (await contributions.get('recent')).contributions
+  const { user, prs } = await contributions.get()
   const favicon = new URL('/favicon.png', domain).href
   const feed = new Feed({
     title: `${user.name} is contributing...`,
@@ -21,7 +21,7 @@ export default defineHandler(async (event) => {
     },
   })
 
-  for (const pr of prs) {
+  for (const pr of prs.items) {
     feed.addItem({
       link: pr.url,
       date: new Date(pr.created_at),

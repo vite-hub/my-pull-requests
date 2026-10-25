@@ -26,6 +26,27 @@ export type Issue = {
   stars: number
 }
 
+export type ActivityPage<T> = {
+  /** Cursor for the next page, or `null` when every result is loaded. */
+  cursor: string | null
+  items: T[]
+  total: number
+}
+
+export type Activity = {
+  issues: ActivityPage<Issue>
+  prs: ActivityPage<PullRequest>
+  /** Every public repository with a pull request or issue, or `null` for filtered results. */
+  repositories: number | null
+  user: User
+}
+
+export type ContributedRepository = {
+  name: string
+  stars: number
+  type: 'User' | 'Organization'
+}
+
 export type MonthlyRecapDay = {
   completed: number
   date: string
