@@ -14,13 +14,14 @@ if (error.value) {
 if (!recap.value) throw new HTTPError({ status: 404, statusText: 'Not Found', message: 'Monthly recap not found' })
 
 const recapData = recap.value
+const forge = recapData.forge ?? 'GitHub'
 const totalCompleted = recapData.metrics.mergedPullRequests + recapData.metrics.closedIssues
 const dailyActivity = recapData.days.map(day => day.opened + day.completed)
 const busiestDayIndex = recapData.days.findIndex(day => day.date === recapData.busiestDay.date)
 const activityBars = dailyActivity.map(count => count / Math.max(1, ...dailyActivity) * 100)
 const { isSupported: canShare, share: shareNative } = useShare({
-  text: `${recapData.user.name}'s ${recapData.label} GitHub recap`,
-  title: `${recapData.user.name}'s GitHub monthly recap`,
+  text: `${recapData.user.name}'s ${recapData.label} ${forge} recap`,
+  title: `${recapData.user.name}'s ${forge} monthly recap`,
   url: shareUrl,
 })
 const { copy: copyShareUrl } = useClipboard({ source: shareUrl, legacy: true })
@@ -40,9 +41,9 @@ async function shareRecap() {
 }
 
 useSeoMeta({
-  title: `${recapData.user.name}'s ${recapData.label} GitHub recap`,
+  title: `${recapData.user.name}'s ${recapData.label} ${forge} recap`,
   description: `${recapData.user.name} opened ${recapData.metrics.openedPullRequests} pull requests and merged ${recapData.metrics.mergedPullRequests} in ${recapData.label}.`,
-  ogTitle: `${recapData.user.name}'s ${recapData.label} GitHub recap`,
+  ogTitle: `${recapData.user.name}'s ${recapData.label} ${forge} recap`,
   ogDescription: `${totalCompleted} issues and pull requests completed in ${recapData.label}.`,
   twitterCard: 'summary_large_image',
 })

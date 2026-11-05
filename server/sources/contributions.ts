@@ -1,175 +1,94 @@
+import type { ForgeProvider, RepoRef } from 'forges'
 import { HTTPError } from 'h3'
 import { defineCachedFunction } from 'nitro/cache'
 
 import {
   formatActivityQuery,
-  isActivityFilterEmpty,
   parseActivityQuery,
-  toGitHubSearchQuery,
+  restrictActivityFilter,
+  type ActivityCapabilities,
   type ActivityKind,
   type ActivitySort,
 } from '../../shared/utils/activity-query'
+import { useForge } from '../utils/forge'
 import {
-  getGitHubStatus,
-  normalizeGitHubActivity,
-  normalizeGitHubSearch,
-  type GitHubActivity,
-  type GitHubSearch,
-} from '../utils/github-activity'
-import { createGitHubClient } from '../utils/github-client'
+  decodeCursor,
+  fetchForgeActivity,
+  fetchForgePage,
+  fetchForgeRepositories,
+  fetchForgeUser,
+  readRepository,
+  toForgeSearchQuery,
+} from '../utils/forge-activity'
+import { withForgeErrors } from '../utils/forge-errors'
+import { fetchGitHubActivity, fetchGitHubActivityPage, fetchGitHubRepositories } from '../utils/github-activity'
 
-export const ACTIVITY_PAGE_SIZE = 50
-
-const SEARCH_FIELDS = `#graphql
-  issueCount
-  pageInfo { endCursor hasNextPage }
-  nodes {
-    ... on PullRequest {
-      createdAt
-      isDraft
-      mergedAt
-      number
-      state
-      title
-      url
-      repository { ...ActivityRepository }
-    }
-    ... on Issue {
-      createdAt
-      number
-      state
-      title
-      url
-      repository { ...ActivityRepository }
-    }
-  }
-`
-
-const REPOSITORY_FRAGMENT = `#graphql
-  fragment ActivityRepository on Repository {
-    isPrivate
-    nameWithOwner
-    stargazerCount
-    owner { __typename }
-  }
-`
-
-const GITHUB_ACTIVITY_QUERY = `#graphql
-  query GitHubActivity($pullRequests: String!, $issues: String!, $withIssues: Boolean!, $first: Int!) {
-    viewer {
-      avatarUrl
-      login
-      name
-      repositoriesContributedTo(first: 0, includeUserRepositories: true, privacy: PUBLIC, contributionTypes: [PULL_REQUEST, ISSUE]) {
-        totalCount
-      }
-    }
-    pullRequests: search(query: $pullRequests, type: ISSUE_ADVANCED, first: $first) { ${SEARCH_FIELDS} }
-    issues: search(query: $issues, type: ISSUE_ADVANCED, first: $first) @include(if: $withIssues) { ${SEARCH_FIELDS} }
-  }
-  ${REPOSITORY_FRAGMENT}
-`
-
-const GITHUB_ACTIVITY_PAGE_QUERY = `#graphql
-  query GitHubActivityPage($search: String!, $after: String!, $first: Int!) {
-    search(query: $search, type: ISSUE_ADVANCED, first: $first, after: $after) { ${SEARCH_FIELDS} }
-  }
-  ${REPOSITORY_FRAGMENT}
-`
-
-const GITHUB_REPOSITORIES_QUERY = `#graphql
-  query GitHubContributedRepositories($after: String) {
-    viewer {
-      repositoriesContributedTo(first: 100, after: $after, includeUserRepositories: true, privacy: PUBLIC, contributionTypes: [PULL_REQUEST, ISSUE], orderBy: { field: STARGAZERS, direction: DESC }) {
-        pageInfo { endCursor hasNextPage }
-        nodes { ...ActivityRepository }
-      }
-    }
-  }
-  ${REPOSITORY_FRAGMENT}
-`
-
-type GitHubRepositories = {
-  viewer: {
-    repositoriesContributedTo: {
-      nodes: Array<{ isPrivate: boolean, nameWithOwner: string, owner: { __typename: 'Organization' | 'User' }, stargazerCount: number } | null>
-      pageInfo: { endCursor: string | null, hasNextPage: boolean }
-    }
-  }
+/** Normalizes the URL query to what the forge can apply, so equivalent queries share one cache entry. */
+export function normalizeActivityQuery(query: unknown, capabilities: ActivityCapabilities = useForge().info.capabilities) {
+  return formatActivityQuery(restrictActivityFilter(parseActivityQuery(query), capabilities))
 }
 
-async function withGitHubErrors<T>(request: () => Promise<T>) {
-  try {
-    return await request()
-  }
-  catch (error) {
-    const status = getGitHubStatus(error)
-    if (status === 401) throw new HTTPError({ status: 401, statusText: 'Unauthorized', message: 'GitHub token invalid/expired' })
-    if (status === 429) throw new HTTPError({ status: 429, statusText: 'Too Many Requests', message: 'GitHub rate limit exceeded' })
-    if (status === 403) throw new HTTPError({ status: 403, statusText: 'Forbidden', message: 'GitHub API forbidden' })
-    if (status) throw new HTTPError({ status: 502, statusText: 'Bad Gateway', message: 'Failed to fetch GitHub activity' })
-    throw error
-  }
+/** The search order. Star sorting reorders loaded results in the page. */
+export function normalizeActivityOrder(sort: unknown, capabilities: ActivityCapabilities = useForge().info.capabilities): ActivitySort {
+  return sort === 'oldest' && capabilities.oldest ? 'oldest' : 'newest'
 }
 
-/** Normalizes the URL query so equivalent queries share one cache entry. */
-export function normalizeActivityQuery(query: unknown) {
-  return formatActivityQuery(parseActivityQuery(query))
-}
+const cachedRepository = defineCachedFunction((provider: ForgeProvider, repo: RepoRef) => readRepository(provider, repo), {
+  getKey: (_provider: ForgeProvider, repo: RepoRef) => `${repo.instance}/${repo.owner}/${repo.name}`,
+  maxAge: 60 * 60,
+  name: 'forge-repository',
+  swr: false,
+})
+
+const cachedUser = defineCachedFunction((provider: ForgeProvider) => fetchForgeUser(provider), {
+  getKey: () => 'me',
+  maxAge: 60 * 60,
+  name: 'forge-user',
+  swr: false,
+})
 
 export const contributions = {
   /** First page of pull requests and issues, with totals. Pass a normalized query. */
   get: defineCachedFunction(async (query: string = '', sort: ActivitySort = 'newest') => {
+    const forge = useForge()
     const filter = parseActivityQuery(query)
-    const issues = toGitHubSearchQuery(filter, 'issues', sort)
-    const activity = await withGitHubErrors(() => createGitHubClient().graphql<GitHubActivity>(GITHUB_ACTIVITY_QUERY, {
-      first: ACTIVITY_PAGE_SIZE,
-      issues: issues ?? '',
-      pullRequests: toGitHubSearchQuery(filter, 'prs', sort)!,
-      withIssues: issues !== null,
-    }))
-    return normalizeGitHubActivity(activity, !isActivityFilterEmpty(filter))
+    return withForgeErrors(() => forge.kind === 'github'
+      ? fetchGitHubActivity(forge.provider, forge.info, filter, sort)
+      : cachedUser(forge.provider).then(user => fetchForgeActivity(forge.provider, forge.info, user, filter, sort, forge.token, cachedRepository)))
   }, {
     maxAge: 60 * 5,
-    name: 'github-activity',
+    name: 'activity',
     swr: false,
   }),
 
   /** A later page of one kind, continuing from the cursor of the previous page. */
   page: defineCachedFunction(async (kind: ActivityKind, query: string, sort: ActivitySort, after: string) => {
-    const search = toGitHubSearchQuery(parseActivityQuery(query), kind, sort)
-    if (!search) return { cursor: null, items: [], total: 0 }
-    const { search: result } = await withGitHubErrors(() => createGitHubClient().graphql<{ search: GitHubSearch }>(GITHUB_ACTIVITY_PAGE_QUERY, {
-      after,
-      first: ACTIVITY_PAGE_SIZE,
-      search,
-    }))
-    return kind === 'prs' ? normalizeGitHubSearch('prs', result) : normalizeGitHubSearch('issues', result)
+    const forge = useForge()
+    const filter = parseActivityQuery(query)
+    if (forge.kind === 'github') return withForgeErrors(() => fetchGitHubActivityPage(forge.provider, kind, filter, sort, after))
+
+    const cursor = await decodeCursor(after, forge.token)
+    if (!cursor) throw new HTTPError({ status: 400, message: 'Invalid page cursor' })
+    return withForgeErrors(async () => {
+      const { username } = await cachedUser(forge.provider)
+      return fetchForgePage(forge.provider, toForgeSearchQuery(forge.provider, filter, kind, sort, username), forge.token, cachedRepository, cursor)
+    })
   }, {
     maxAge: 60 * 5,
-    name: 'github-activity-page',
+    name: 'activity-page',
     swr: false,
   }),
 
   /** Public repositories with a pull request or issue, most starred first. */
   repositories: defineCachedFunction(async () => {
-    const github = createGitHubClient()
-    const repositories: ContributedRepository[] = []
-    let after: string | null = null
-    do {
-      const { viewer }: GitHubRepositories = await withGitHubErrors(() => github.graphql<GitHubRepositories>(GITHUB_REPOSITORIES_QUERY, { after }))
-      const page = viewer.repositoriesContributedTo
-      for (const repository of page.nodes) {
-        if (!repository || repository.isPrivate) continue
-        repositories.push({ name: repository.nameWithOwner, stars: repository.stargazerCount, type: repository.owner.__typename })
-      }
-      after = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null
-    } while (after && repositories.length < 1000)
-    return repositories.sort((a, b) => b.stars - a.stars)
+    const forge = useForge()
+    return withForgeErrors(() => forge.kind === 'github'
+      ? fetchGitHubRepositories(forge.provider)
+      : cachedUser(forge.provider).then(user => fetchForgeRepositories(forge.provider, user, cachedRepository)))
   }, {
     getKey: () => 'repositories',
     maxAge: 60 * 60,
-    name: 'github-repositories',
+    name: 'repositories',
     swr: false,
   }),
 }

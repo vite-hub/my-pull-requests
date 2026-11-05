@@ -1,6 +1,6 @@
 # ViteHub Pull Requests
 
-A public dashboard for recent open source contributions, plus a shareable GitHub recap generated every month.
+A public dashboard for recent open source contributions on GitHub, GitLab, Codeberg or another Forgejo, or Gitea, plus a shareable recap generated every month.
 
 [View it live →](https://prs.onmax.me)
 
@@ -8,7 +8,7 @@ A public dashboard for recent open source contributions, plus a shareable GitHub
 
 See my latest pull requests and issues at [prs.onmax.me](https://prs.onmax.me).
 
-[![Recent GitHub contributions](.github/assets/landing.jpg)](https://prs.onmax.me)
+[![Recent contributions](.github/assets/landing.jpg)](https://prs.onmax.me)
 
 ## Monthly recap
 
@@ -36,11 +36,23 @@ pnpm install
 cp .env.example .env
 ```
 
-Add a [fine-grained GitHub token](https://github.com/settings/personal-access-tokens/new) to `.env`:
+Choose a forge and add a token for your account to `.env`. GitHub is the default:
 
 ```dotenv
-NUXT_GITHUB_TOKEN=your-github-token
+FORGE=github
+FORGE_TOKEN=your-token
 ```
+
+| Forge | `FORGE` | `FORGE_BASE_URL` | Token |
+| --- | --- | --- | --- |
+| GitHub | `github` (default) | Only for GitHub Enterprise Server | A [fine-grained token](https://github.com/settings/personal-access-tokens/new) with no special scopes |
+| GitLab | `gitlab` | Only outside gitlab.com | A personal access token with `read_api` |
+| Codeberg, Forgejo | `forgejo` | Only outside codeberg.org | An access token with read access to issues, repositories and users |
+| Gitea | `gitea` | Only outside gitea.com | An access token with read access to issues, repositories and users |
+
+The dashboard reads the forge through [forges](https://forges.link). Only public repositories are listed, but a token that can read private repositories still counts them in totals on GitLab, Forgejo and Gitea, so give it public access only where the forge allows. `GITHUB_TOKEN` and `NUXT_GITHUB_TOKEN` still work for GitHub.
+
+The filter supports everything on GitHub. GitLab, Forgejo and Gitea use their own text search, search one owner or repository at a time and have no `created:`, merged or draft filter. Forgejo and Gitea list newest first only. When a forge does not report a total, the dashboard shows the loaded count with `+` while more pages remain.
 
 ```sh
 pnpm dev

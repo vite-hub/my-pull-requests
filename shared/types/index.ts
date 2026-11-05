@@ -1,7 +1,17 @@
+import type { ActivityCapabilities, ForgeKind } from '../utils/activity-query'
+
 export type User = {
   username: string
   name: string
   avatar: string
+  url: string
+}
+
+export type ForgeInfo = {
+  capabilities: ActivityCapabilities
+  kind: ForgeKind
+  /** Shown to readers, for example `GitHub` or `Codeberg`. */
+  name: string
 }
 
 export type PullRequest = {
@@ -13,6 +23,8 @@ export type PullRequest = {
   number: number
   type: 'User' | 'Organization'
   stars: number
+  repoUrl: string
+  ownerAvatar?: string
 }
 
 export type Issue = {
@@ -24,16 +36,20 @@ export type Issue = {
   number: number
   type: 'User' | 'Organization'
   stars: number
+  repoUrl: string
+  ownerAvatar?: string
 }
 
 export type ActivityPage<T> = {
   /** Cursor for the next page, or `null` when every result is loaded. */
   cursor: string | null
   items: T[]
-  total: number
+  /** Null when the forge does not report a total. */
+  total: number | null
 }
 
 export type Activity = {
+  forge: ForgeInfo
   issues: ActivityPage<Issue>
   prs: ActivityPage<PullRequest>
   /** Every public repository with a pull request or issue, or `null` for filtered results. */
@@ -43,8 +59,10 @@ export type Activity = {
 
 export type ContributedRepository = {
   name: string
+  ownerAvatar?: string
   stars: number
   type: 'User' | 'Organization'
+  url: string
 }
 
 export type MonthlyRecapDay = {
@@ -57,6 +75,8 @@ export type MonthlyRecap = {
   busiestDay: { count: number, date: string, label: string }
   busiestHour: { count: number, hour: number, label: string }
   days: MonthlyRecapDay[]
+  /** The forge the recap was read from. Recaps stored before forges existed have none and come from GitHub. */
+  forge?: string
   label: string
   metrics: {
     closedIssues: number

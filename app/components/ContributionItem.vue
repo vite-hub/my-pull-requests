@@ -4,8 +4,9 @@ const props = defineProps<{
   kind: 'issue' | 'pull-request'
 }>()
 
-const owner = computed(() => props.data.repo.split('/')[0])
-const repoName = computed(() => props.data.repo.split('/')[1])
+// GitLab projects can sit in nested groups, so the owner is everything before the last segment.
+const owner = computed(() => props.data.repo.split('/').slice(0, -1).join('/'))
+const repoName = computed(() => props.data.repo.split('/').at(-1))
 const timeAgo = useTimeAgo(() => new Date(props.data.created_at))
 const stateIcons: Record<string, string> = {
   'issue:closed': 'i-lucide-circle-check',
@@ -21,13 +22,13 @@ const stateIcon = computed(() => stateIcons[`${props.kind}:${props.data.state}`]
 <template>
   <article class="contribution-item">
     <a
-      :href="`https://github.com/${data.repo}`"
+      :href="data.repoUrl"
       target="_blank"
       rel="noopener noreferrer"
       class="repo-avatar"
     >
       <UAvatar
-        :src="`https://github.com/${owner}.png`"
+        :src="data.ownerAvatar"
         :alt="data.repo"
         size="xl"
         :class="data.type === 'Organization' ? 'rounded-lg' : 'rounded-full'"
@@ -57,7 +58,7 @@ const stateIcon = computed(() => stateIcons[`${props.kind}:${props.data.state}`]
 
         <div class="contribution-meta">
           <a
-            :href="`https://github.com/${data.repo}`"
+            :href="data.repoUrl"
             target="_blank"
             rel="noopener noreferrer"
             class="repo-link"
@@ -67,7 +68,7 @@ const stateIcon = computed(() => stateIcons[`${props.kind}:${props.data.state}`]
             <span class="truncate">{{ repoName }}</span>
           </a>
           <a
-            :href="`https://github.com/${data.repo}`"
+            :href="data.repoUrl"
             target="_blank"
             rel="noopener noreferrer"
             class="star-count"

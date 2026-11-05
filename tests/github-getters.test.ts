@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { registerHooks } from 'node:module'
 import { mock, test } from 'node:test'
 
+import { AuthenticationRequiredError, ForbiddenError, ForgeApiError, RateLimitedError } from 'forges'
+
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (context.parentURL?.includes('/server/') && specifier.startsWith('.') && !specifier.endsWith('.ts')) {
@@ -15,7 +17,7 @@ let graphqlCalls = 0
 const graphqlVariables: Array<Record<string, unknown>> = []
 let githubError: unknown
 let incompleteResults = false
-const repository = { isPrivate: false, nameWithOwner: 'nuxt/nuxt', owner: { __typename: 'Organization' }, stargazerCount: 60000 }
+const repository = { isPrivate: false, nameWithOwner: 'nuxt/nuxt', owner: { __typename: 'Organization', avatarUrl: 'https://example.com/nuxt.png' }, stargazerCount: 60000, url: 'https://github.com/nuxt/nuxt' }
 const search = (nodes: unknown[]) => ({ issueCount: 4165, nodes, pageInfo: { endCursor: 'cursor-1', hasNextPage: true } })
 const pullRequests = search([
   { createdAt: '2026-10-01T00:00:00Z', isDraft: false, mergedAt: null, number: 1, repository, state: 'CLOSED', title: 'perf: closed', url: 'https://github.com/nuxt/nuxt/pull/1' },
@@ -27,29 +29,35 @@ const activity = {
   issues: search([]),
   pullRequests,
   search: pullRequests,
-  viewer: { avatarUrl: 'https://example.com/avatar.png', login: 'learner', name: null, repositoriesContributedTo: { totalCount: 148 } },
+  viewer: { avatarUrl: 'https://example.com/avatar.png', login: 'learner', name: null, repositoriesContributedTo: { totalCount: 148 }, url: 'https://github.com/learner' },
 }
 
-mock.module(new URL('../server/utils/github-client.ts', import.meta.url).href, {
+const searches: string[] = []
+const provider = {
+  graphql: async (_query: string, variables: Record<string, unknown>) => {
+    graphqlCalls++
+    graphqlVariables.push(variables)
+    if (githubError) throw githubError
+    return activity
+  },
+  search: {
+    threads: (query: { queryRaw: string }) => ({
+      page: async () => {
+        searches.push(query.queryRaw)
+        return { items: [], total: 0, warnings: incompleteResults ? [{ code: 'search_incomplete', message: 'GitHub stopped the search' }] : [] }
+      },
+    }),
+  },
+  users: { me: async () => ({ avatarUrl: activity.viewer.avatarUrl, login: 'learner', url: activity.viewer.url }) },
+}
+
+mock.module(new URL('../server/utils/forge.ts', import.meta.url).href, {
   namedExports: {
-    createGitHubClient: () => ({
-      graphql: async (_query: string, variables: Record<string, unknown>) => {
-        graphqlCalls++
-        graphqlVariables.push(variables)
-        if (githubError) throw githubError
-        return activity
-      },
-      paginate: {
-        iterator: async function* () {
-          yield {
-            data: Object.assign([], { incomplete_results: incompleteResults, total_count: 0 }),
-          }
-        },
-      },
-      rest: {
-        search: { issuesAndPullRequests: () => {} },
-        users: { getAuthenticated: async () => ({ data: { avatar_url: activity.viewer.avatarUrl, login: 'learner', name: null } }) },
-      },
+    useForge: () => ({
+      info: { capabilities: { created: true, multipleScopes: true, oldest: true, states: ['open', 'draft', 'merged', 'closed'] }, kind: 'github', name: 'GitHub' },
+      kind: 'github',
+      provider,
+      token: 'token',
     }),
   },
 })
@@ -63,6 +71,10 @@ test('caches activity and preserves provider error status', async () => {
   assert.deepEqual(second, first)
   assert.equal(first.user.name, 'learner')
   assert.equal(first.prs.total, 4165)
+  assert.equal(first.forge.name, 'GitHub')
+  assert.equal(first.user.url, 'https://github.com/learner')
+  assert.equal(first.prs.items[0]!.repoUrl, 'https://github.com/nuxt/nuxt')
+  assert.equal(first.prs.items[0]!.ownerAvatar, 'https://example.com/nuxt.png')
   assert.equal(first.prs.cursor, 'cursor-1')
   assert.equal(first.repositories, 148)
   assert.deepEqual(first.prs.items.map(item => [item.number, item.state]), [[1, 'closed'], [2, 'merged']])
@@ -80,10 +92,10 @@ test('caches activity and preserves provider error status', async () => {
   assert.equal(graphqlVariables.at(-1)!.search, 'type:pr author:@me is:public (is:open OR is:merged) in:title "perf" sort:created-asc')
 
   for (const [error, status] of [
-    [{ status: 401 }, 401],
-    [{ status: 403 }, 403],
-    [{ response: { headers: { 'x-ratelimit-remaining': '0' } }, status: 403 }, 429],
-    [{ status: 500 }, 502],
+    [new AuthenticationRequiredError('Bad credentials', 401, ''), 401],
+    [new ForbiddenError('Forbidden', 403, '', 'unknown'), 403],
+    [new RateLimitedError('API rate limit exceeded', 403, ''), 429],
+    [new ForgeApiError('Server error', 500, ''), 502],
   ] as const) {
     await contributions.get.invalidate()
     githubError = error
@@ -97,6 +109,13 @@ test('loads the requested month and rejects incomplete searches', async () => {
   assert.equal(recap.month, '2026-09')
   assert.equal(recap.user.username, 'learner')
   assert.equal(recap.days.length, 30)
+  assert.equal(recap.forge, 'GitHub')
+  assert.deepEqual(searches, [
+    'type:pr author:learner is:public created:2026-09-01..2026-09-30',
+    'type:pr author:learner is:public is:merged merged:2026-09-01..2026-09-30',
+    'type:issue author:learner is:public created:2026-09-01..2026-09-30',
+    'type:issue author:learner is:public is:closed closed:2026-09-01..2026-09-30',
+  ])
 
   incompleteResults = true
   await assert.rejects(monthlyRecaps.get('2026-09'), /incomplete search results/)

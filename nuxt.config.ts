@@ -69,10 +69,16 @@ export default defineNuxtConfig({
       : true,
     env: {
       server: {
-        githubToken: env({
-          secret: true,
-          source: env.source(['GITHUB_TOKEN', 'NUXT_GITHUB_TOKEN']),
-        }),
+        forge: {
+          kind: env.enum(['github', 'gitlab', 'forgejo', 'gitea'], { default: 'github', source: env.source('FORGE') }),
+          // The forge's root URL, for GitLab, Forgejo or Gitea outside gitlab.com and codeberg.org.
+          baseUrl: env({ optional: true, source: env.source('FORGE_BASE_URL') }),
+          // `GITHUB_TOKEN` and `NUXT_GITHUB_TOKEN` keep deployments from before `FORGE_TOKEN` working.
+          token: env({
+            secret: true,
+            source: env.source(['FORGE_TOKEN', 'GITHUB_TOKEN', 'NUXT_GITHUB_TOKEN']),
+          }),
+        },
         recap: {
           from: env({ source: env.source('RECAP_FROM') }),
           siteUrl: env({ source: env.source('RECAP_SITE_URL') }),

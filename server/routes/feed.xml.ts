@@ -5,11 +5,11 @@ import { contributions } from '../sources/contributions'
 
 export default defineHandler(async (event) => {
   const domain = getRequestURL(event).origin
-  const { user, prs } = await contributions.get()
+  const { forge, prs, user } = await contributions.get()
   const favicon = new URL('/favicon.png', domain).href
   const feed = new Feed({
     title: `${user.name} is contributing...`,
-    description: `Discover ${user.name}'s recent pull requests on GitHub`,
+    description: `Discover ${user.name}'s recent pull requests on ${forge.name}`,
     id: domain,
     link: domain,
     language: 'en',
@@ -26,7 +26,7 @@ export default defineHandler(async (event) => {
       link: pr.url,
       date: new Date(pr.created_at),
       title: pr.title,
-      image: `https://github.com/${pr.repo.split('/')[0]}.png`,
+      image: pr.ownerAvatar,
       description: `<a href="${pr.url}">${pr.title}</a>`,
     })
   }

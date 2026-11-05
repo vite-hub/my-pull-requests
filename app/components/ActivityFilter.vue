@@ -1,5 +1,8 @@
 <script setup lang="ts">
 const props = defineProps<{
+  capabilities: ActivityCapabilities
+  /** Avatars of the owners in the loaded results, by owner. */
+  ownerAvatars: Record<string, string | undefined>
   query: string
 }>()
 
@@ -30,33 +33,48 @@ watch(open, (isOpen) => {
 })
 
 function update(patch: Partial<ActivityFilter>) {
-  emit('update:query', formatActivityQuery({ ...filter.value, ...patch }))
+  const next = { ...filter.value, ...patch }
+  // A forge that searches one scope at a time keeps the owner or repository picked last.
+  if (!props.capabilities.multipleScopes && patch.owners?.length) next.repos = []
+  emit('update:query', formatActivityQuery(restrictActivityFilter(next, props.capabilities)))
 }
 
 function applyDraft() {
-  emit('update:query', formatActivityQuery(parseActivityQuery(draft.value)))
+  emit('update:query', formatActivityQuery(restrictActivityFilter(parseActivityQuery(draft.value), props.capabilities)))
 }
 
-const stateOptions: Array<{ icon: string, label: string, value: ActivityState }> = [
+const allStateOptions: Array<{ icon: string, label: string, value: ActivityState }> = [
   { icon: 'i-lucide-git-pull-request-arrow', label: 'Open', value: 'open' },
   { icon: 'i-lucide-git-pull-request-draft', label: 'Draft', value: 'draft' },
   { icon: 'i-lucide-git-merge', label: 'Merged', value: 'merged' },
   { icon: 'i-lucide-circle-check', label: 'Closed', value: 'closed' },
 ]
+const stateOptions = computed(() => allStateOptions.filter(option => props.capabilities.states.includes(option.value)))
+const qualifiers = computed(() => ['is:', 'org:', 'repo:', ...props.capabilities.created ? ['created:'] : []])
+
+function ownerOf(repo: string) {
+  return repo.split('/').slice(0, -1).join('/')
+}
 
 function toggleState(state: ActivityState) {
   const states = filter.value.states
   update({ states: states.includes(state) ? states.filter(item => item !== state) : [...states, state] })
 }
 
+const avatars = computed(() => {
+  const avatars = { ...props.ownerAvatars }
+  for (const repository of repositories.value) avatars[ownerOf(repository.name)] ??= repository.ownerAvatar
+  return avatars
+})
+
 function ownerAvatar(owner: string) {
-  return { alt: '', src: `https://github.com/${owner}.png?size=40` }
+  return { alt: owner, src: avatars.value[owner] }
 }
 
 const ownerItems = computed(() => {
   const owners = new Map<string, number>()
   for (const repository of repositories.value) {
-    const owner = repository.name.split('/')[0]!
+    const owner = ownerOf(repository.name)
     owners.set(owner, (owners.get(owner) ?? 0) + 1)
   }
   for (const owner of filter.value.owners) {
@@ -74,14 +92,14 @@ const ownerItems = computed(() => {
 
 const repoItems = computed(() => {
   const items = repositories.value.map(repository => ({
-    avatar: ownerAvatar(repository.name.split('/')[0]!),
+    avatar: ownerAvatar(ownerOf(repository.name)),
     description: `${formatStars(repository.stars)} stars`,
     label: repository.name,
     value: repository.name,
   }))
   for (const repo of filter.value.repos) {
     if (!items.some(item => item.value.toLowerCase() === repo.toLowerCase())) {
-      items.unshift({ avatar: ownerAvatar(repo.split('/')[0]!), description: '', label: repo, value: repo })
+      items.unshift({ avatar: ownerAvatar(ownerOf(repo)), description: '', label: repo, value: repo })
     }
   }
   return items
@@ -150,14 +168,18 @@ function copyLink() {
             class="w-full"
             icon="i-lucide-search"
             :maxlength="ACTIVITY_QUERY_MAX_LENGTH"
-            placeholder="perf org:nuxt is:merged"
+            :placeholder="capabilities.states.includes('merged') ? 'perf org:nuxt is:merged' : 'perf is:open'"
+            aria-describedby="activity-filter-hint"
           >
             <template #trailing>
               <UKbd value="enter" />
             </template>
           </UInput>
-          <p class="activity-filter__hint">
-            Words match titles. Also <code>is:</code>, <code>org:</code>, <code>repo:</code> and <code>created:</code>.
+          <p id="activity-filter-hint" class="activity-filter__hint">
+            Search words. Also
+            <template v-for="(qualifier, index) in qualifiers" :key="qualifier">
+              <code>{{ qualifier }}</code>{{ index === qualifiers.length - 1 ? '.' : index === qualifiers.length - 2 ? ' and ' : ', ' }}
+            </template>
           </p>
         </form>
 
@@ -180,7 +202,7 @@ function copyLink() {
           </div>
         </div>
 
-        <UFormField label="Organizations" :ui="{ label: 'activity-filter__label' }">
+        <UFormField :label="capabilities.multipleScopes ? 'Organizations' : 'Organization'" :ui="{ label: 'activity-filter__label' }">
           <UInputMenu
             :model-value="filter.owners"
             :items="ownerItems"
@@ -195,7 +217,7 @@ function copyLink() {
           />
         </UFormField>
 
-        <UFormField label="Repositories" :ui="{ label: 'activity-filter__label' }">
+        <UFormField :label="capabilities.multipleScopes ? 'Repositories' : 'Repository'" :ui="{ label: 'activity-filter__label' }">
           <UInputMenu
             :model-value="filter.repos"
             :items="repoItems"
@@ -210,7 +232,12 @@ function copyLink() {
           />
         </UFormField>
 
-        <div class="activity-filter__section" role="group" aria-labelledby="activity-filter-created">
+        <div
+          v-if="capabilities.created"
+          class="activity-filter__section"
+          role="group"
+          aria-labelledby="activity-filter-created"
+        >
           <p id="activity-filter-created" class="activity-filter__label">
             Created
           </p>

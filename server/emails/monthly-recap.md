@@ -1,4 +1,4 @@
-# {{ recap.user.name }}, this was your {{ recap.label }} on GitHub
+# {{ recap.user.name }}, this was your {{ recap.label }} on {{ forge }}
 
 You opened **{{ recap.metrics.openedPullRequests }} pull requests** and merged **{{ recap.metrics.mergedPullRequests }} pull requests**.
 

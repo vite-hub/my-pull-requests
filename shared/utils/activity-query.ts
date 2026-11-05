@@ -1,4 +1,5 @@
 export type ActivityKind = 'issues' | 'prs'
+export type ForgeKind = 'forgejo' | 'gitea' | 'github' | 'gitlab'
 export type ActivitySort = 'least-stars' | 'most-stars' | 'newest' | 'oldest'
 export type ActivityState = 'closed' | 'draft' | 'merged' | 'open'
 
@@ -10,12 +11,49 @@ export type ActivityFilter = {
   terms: string[]
 }
 
+/** The parts of a filter that a forge's search can apply. */
+export type ActivityCapabilities = {
+  created: boolean
+  /** Whether several `org:` and `repo:` qualifiers can combine. Otherwise one repository, or one owner, applies. */
+  multipleScopes: boolean
+  /** Whether results can come oldest first. */
+  oldest: boolean
+  states: ActivityState[]
+}
+
+export const FORGE_KINDS: ForgeKind[] = ['github', 'gitlab', 'forgejo', 'gitea']
+
+const FORGE_CAPABILITIES: Record<ForgeKind, ActivityCapabilities> = {
+  github: { created: true, multipleScopes: true, oldest: true, states: ['open', 'draft', 'merged', 'closed'] },
+  gitlab: { created: false, multipleScopes: false, oldest: true, states: ['open', 'closed'] },
+  // Forgejo and Gitea return search results newest first, whatever the requested order.
+  forgejo: { created: false, multipleScopes: false, oldest: false, states: ['open', 'closed'] },
+  gitea: { created: false, multipleScopes: false, oldest: false, states: ['open', 'closed'] },
+}
+
+export function forgeCapabilities(kind: ForgeKind) {
+  return FORGE_CAPABILITIES[kind]
+}
+
+/** Drops the parts of a filter that the forge cannot apply, so the URL only shows what is applied. */
+export function restrictActivityFilter(filter: ActivityFilter, capabilities: ActivityCapabilities): ActivityFilter {
+  const repos = capabilities.multipleScopes ? filter.repos : filter.repos.slice(-1)
+  return {
+    created: capabilities.created ? filter.created : null,
+    owners: capabilities.multipleScopes ? filter.owners : repos.length ? [] : filter.owners.slice(-1),
+    repos,
+    states: filter.states.filter(state => capabilities.states.includes(state)),
+    terms: filter.terms,
+  }
+}
+
 export const ACTIVITY_STATES: ActivityState[] = ['open', 'draft', 'merged', 'closed']
 export const ACTIVITY_SORTS: ActivitySort[] = ['newest', 'oldest', 'most-stars', 'least-stars']
 export const ACTIVITY_QUERY_MAX_LENGTH = 256
 
-const OWNER = /^[a-z\d](?:[a-z\d-]{0,38})$/i
-const REPO = /^[a-z\d][a-z\d-]{0,38}\/[\w.-]{1,100}$/i
+// GitLab nests projects in groups, so an owner can hold slashes and a repository more than one.
+const OWNER = /^[a-z\d][\w.-]{0,99}(?:\/[\w.-]{1,100}){0,4}$/i
+const REPO = /^[a-z\d][\w.-]{0,99}(?:\/[\w.-]{1,100}){1,5}$/i
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const CREATED = /^(?:[<>]=?\d{4}-\d{2}-\d{2}|\d{4}-\d{2}-\d{2}(?:\.\.\d{4}-\d{2}-\d{2})?)$/
 
