@@ -12,7 +12,7 @@ const query = computed(() => urlState.q)
 const filter = computed(() => parseActivityQuery(query.value))
 const activeTab = computed(() => urlState.tab)
 const sort = computed(() => urlState.sort)
-// GitHub orders by creation date; star sorting reorders the loaded results.
+// The forge orders by creation date; star sorting reorders the loaded results.
 const order = computed(() => sort.value === 'oldest' ? 'oldest' : undefined)
 
 function encodeQueryValue(value: string) {
@@ -29,7 +29,7 @@ watch(urlState, ({ q, sort, tab }) => {
 })
 
 const { data: activity, error: activityError, status: activityStatus } = await useFetch('/api/activity', {
-  key: computed(() => `github-activity:${query.value}:${order.value ?? 'newest'}`),
+  key: computed(() => `activity:${query.value}:${order.value ?? 'newest'}`),
   query: { q: computed(() => query.value || undefined), sort: order },
 })
 
@@ -48,21 +48,42 @@ watch(activity, (value) => {
 })
 
 const user = current.value.user
+const forge = computed(() => current.value.forge)
+const forgeIcons: Record<ForgeKind, string> = {
+  forgejo: 'i-simple-icons-forgejo',
+  gitea: 'i-simple-icons-gitea',
+  github: 'i-lucide-github',
+  gitlab: 'i-simple-icons-gitlab',
+}
+const forgeIcon = computed(() => forge.value.name === 'Codeberg' ? 'i-simple-icons-codeberg' : forgeIcons[forge.value.kind])
 
-const userUrl = `https://github.com/${user.username}`
+// The URL can hold parts of a filter that the forge cannot apply. The server drops them, and so does the page.
+watch(() => forge.value.capabilities, (capabilities) => {
+  urlState.q = formatActivityQuery(restrictActivityFilter(parseActivityQuery(urlState.q), capabilities))
+  if (urlState.sort === 'oldest' && !capabilities.oldest) urlState.sort = 'newest'
+}, { immediate: true })
+
+const ownerAvatars = computed(() => Object.fromEntries([...current.value.prs.items, ...current.value.issues.items]
+  .map(item => [item.repo.split('/').slice(0, -1).join('/'), item.ownerAvatar])))
+
+const userUrl = user.url
 const numberFormat = new Intl.NumberFormat('en-US')
 const compactFormat = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+function formatTotal(page: ActivityPage<Issue | PullRequest>, compact = false) {
+  const value = page.total ?? page.items.length
+  return `${(compact ? compactFormat : numberFormat).format(value)}${page.total === null && page.cursor ? '+' : ''}`
+}
 const isFiltered = computed(() => !isActivityFilterEmpty(filter.value))
 const tabs = computed(() => [
-  { count: current.value.prs.total, icon: 'i-lucide-git-pull-request', label: 'Pull requests', value: 'prs' },
-  { count: current.value.issues.total, icon: 'i-lucide-circle-dot', label: 'Issues', value: 'issues' },
+  { page: current.value.prs, icon: 'i-lucide-git-pull-request', label: 'Pull requests', value: 'prs' },
+  { page: current.value.issues, icon: 'i-lucide-circle-dot', label: 'Issues', value: 'issues' },
 ] as const)
 const summaryMetrics = computed(() => {
   const { issues, prs, repositories } = current.value
   const loadedRepositories = new Set([...prs.items, ...issues.items].map(item => item.repo)).size
   return [
-    { label: 'Pull requests', value: numberFormat.format(prs.total) },
-    { label: 'Issues', value: numberFormat.format(issues.total) },
+    { label: 'Pull requests', value: formatTotal(prs) },
+    { label: 'Issues', value: formatTotal(issues) },
     {
       label: 'Repositories',
       value: repositories === null
@@ -81,8 +102,8 @@ useHead({
 })
 const url = useRequestURL()
 const description = computed(() => isFiltered.value
-  ? `${numberFormat.format(current.value.prs.total)} pull requests and ${numberFormat.format(current.value.issues.total)} issues by ${user.name} matching “${query.value}”.`
-  : `Discover ${user.name} recent pull requests and issues on GitHub.`)
+  ? `${formatTotal(current.value.prs)} pull requests and ${formatTotal(current.value.issues)} issues by ${user.name} matching “${query.value}”.`
+  : `Discover ${user.name} recent pull requests and issues on ${forge.value.name}.`)
 useSeoMeta({
   title: `${user.name} is Contributing`,
   description,
@@ -112,7 +133,7 @@ function setQuery(value: string) {
   urlState.q = formatActivityQuery(parseActivityQuery(value))
 }
 
-const items = computed(() => [sortOptions.slice(0, 2), sortOptions.slice(2)].map(group => group.map(option => ({
+const items = computed(() => [sortOptions.slice(0, 2), sortOptions.slice(2)].map(group => group.filter(option => option.value !== 'oldest' || forge.value.capabilities.oldest).map(option => ({
   checked: sort.value === option.value,
   icon: option.icon,
   label: option.label,
@@ -196,8 +217,8 @@ function onTabKeydown(event: KeyboardEvent, index: number) {
               :to="userUrl"
               external
               target="_blank"
-              label="GitHub profile"
-              icon="i-lucide-github"
+              :label="`${forge.name} profile`"
+              :icon="forgeIcon"
               color="neutral"
               variant="subtle"
             />
@@ -253,13 +274,18 @@ function onTabKeydown(event: KeyboardEvent, index: number) {
                   @keydown="onTabKeydown($event, index)"
                 >
                   <template #trailing>
-                    <span class="tab-count" :title="numberFormat.format(tab.count)">{{ compactFormat.format(tab.count) }}</span>
+                    <span class="tab-count" :title="formatTotal(tab.page)">{{ formatTotal(tab.page, true) }}</span>
                   </template>
                 </UButton>
               </div>
 
               <div class="activity-tools">
-                <ActivityFilter :query="query" @update:query="setQuery" />
+                <ActivityFilter
+                  :capabilities="forge.capabilities"
+                  :owner-avatars="ownerAvatars"
+                  :query="query"
+                  @update:query="setQuery"
+                />
 
                 <UDropdownMenu
                   :items="items"
@@ -281,10 +307,10 @@ function onTabKeydown(event: KeyboardEvent, index: number) {
             </div>
           </div>
 
-          <ActivityFilterChips :query="query" @update:query="setQuery" />
+          <ActivityFilterChips :owner-avatars="ownerAvatars" :query="query" @update:query="setQuery" />
 
           <p v-if="activityError" class="activity-error" role="alert">
-            Could not load these results from GitHub. The list below is from your previous filter.
+            Could not load these results from {{ forge.name }}. The list below is from your previous filter.
           </p>
 
           <div
@@ -319,7 +345,7 @@ function onTabKeydown(event: KeyboardEvent, index: number) {
 
           <div v-if="activePage.cursor || loadMoreError" class="load-more">
             <p class="load-more__progress">
-              Showing {{ numberFormat.format(activePage.items.length) }} of {{ numberFormat.format(activePage.total) }}
+              Showing {{ numberFormat.format(activePage.items.length) }}{{ activePage.total === null ? ' results' : ` of ${numberFormat.format(activePage.total)}` }}
             </p>
             <UButton
               v-if="activePage.cursor"

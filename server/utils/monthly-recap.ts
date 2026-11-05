@@ -14,13 +14,14 @@ export function getMonthRange(month: string) {
   }
 }
 
-export function assertCompleteSearchResults(response: { data: { incomplete_results?: boolean, total_count: number } }, query: string) {
-  if (response.data.incomplete_results) throw new Error(`GitHub returned incomplete search results for: ${query}`)
-  if (response.data.total_count > 1000) throw new Error(`GitHub search is capped at 1000 results for: ${query}`)
+export function assertCompleteSearch(page: { total?: number, warnings?: Array<{ code: string }> }, query: string, cap?: number) {
+  if (page.warnings?.some(warning => warning.code === 'search_incomplete')) throw new Error(`The forge returned incomplete search results for: ${query}`)
+  if (cap !== undefined && (page.total ?? 0) > cap) throw new Error(`The forge search is capped at ${cap} results for: ${query}`)
 }
 
-export function buildMonthlyRecap({ events, metrics, month, user }: {
+export function buildMonthlyRecap({ events, forge, metrics, month, user }: {
   events: Array<{ at: string, kind: 'completed' | 'opened', repo: string }>
+  forge: string
   metrics: MonthlyRecap['metrics']
   month: string
   user: User
@@ -63,6 +64,7 @@ export function buildMonthlyRecap({ events, metrics, month, user }: {
       label: `${String(busiestHour).padStart(2, '0')}:00 UTC`,
     },
     days,
+    forge,
     label: new Intl.DateTimeFormat('en', { month: 'long', timeZone: 'UTC', year: 'numeric' }).format(start),
     metrics,
     month,

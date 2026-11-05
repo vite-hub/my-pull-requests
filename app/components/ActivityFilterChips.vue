@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{
+  /** Avatars of the owners in the loaded results, by owner. */
+  ownerAvatars: Record<string, string | undefined>
   query: string
 }>()
 
@@ -21,7 +23,7 @@ function formatCreated(created: string) {
 }
 
 function ownerAvatar(owner: string) {
-  return { alt: '', src: `https://github.com/${owner}.png?size=40` }
+  return { alt: owner, src: props.ownerAvatars[owner] }
 }
 
 const chips = computed(() => {
@@ -31,7 +33,7 @@ const chips = computed(() => {
     ...terms.map(term => ({ avatar: undefined, key: `term:${term}`, label: `“${term}”`, query: without({ terms: terms.filter(item => item !== term) }) })),
     ...states.map(state => ({ avatar: undefined, key: `is:${state}`, label: state[0]!.toUpperCase() + state.slice(1), query: without({ states: states.filter(item => item !== state) }) })),
     ...owners.map(owner => ({ avatar: ownerAvatar(owner), key: `org:${owner}`, label: owner, query: without({ owners: owners.filter(item => item !== owner) }) })),
-    ...repos.map(repo => ({ avatar: ownerAvatar(repo.split('/')[0]!), key: `repo:${repo}`, label: repo, query: without({ repos: repos.filter(item => item !== repo) }) })),
+    ...repos.map(repo => ({ avatar: ownerAvatar(repo.split('/').slice(0, -1).join('/')), key: `repo:${repo}`, label: repo, query: without({ repos: repos.filter(item => item !== repo) }) })),
     ...created ? [{ avatar: undefined, key: 'created', label: formatCreated(created), query: without({ created: null }) }] : [],
   ]
 })
