@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { registerHooks } from 'node:module'
 import { test } from 'node:test'
 
-import type { ForgeProvider, RepoRef } from 'forges'
+import { gitea, type ForgeProvider, type RepoRef } from 'forges'
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
@@ -90,6 +90,33 @@ test('reads a page without private repositories and signs its cursor', async () 
   const forged = await encodeCursor({ nextUrl: 'https://attacker.example/steal' }, 'another token')
   assert.equal(await decodeCursor(forged!, 'token'), null)
   assert.equal(await decodeCursor('not-a-cursor', 'token'), null)
+})
+
+test('scopes Gitea repository searches before pagination and counting', async () => {
+  const provider = gitea({
+    auth: { type: 'token', token: 'token' },
+    fetch: async (input) => {
+      const url = new URL(String(input))
+      const scoped = url.pathname === '/api/v1/repos/learner/target/issues'
+      const name = scoped ? 'target' : 'other'
+      return Response.json([{
+        created_at: '2026-10-01T00:00:00Z',
+        html_url: `https://gitea.com/learner/${name}/issues/1`,
+        number: 1,
+        repository: { full_name: `learner/${name}` },
+        state: 'open',
+        title: 'perf',
+        user: { login: 'learner' },
+      }], { headers: { 'x-total-count': scoped ? '1' : '2' } })
+    },
+  })
+  const query = toForgeSearchQuery(provider, parseActivityQuery('repo:learner/target'), 'issues', 'newest', 'learner')
+  const page = await fetchForgePage(provider, { ...query, perPage: 1 }, 'token', async () => ({
+    public: true, stars: 0, type: 'User', url: 'https://gitea.com/learner/target',
+  }))
+  assert.deepEqual(page.items.map(item => item.repo), ['learner/target'])
+  assert.equal(page.total, 1)
+  assert.equal(page.cursor, null)
 })
 
 test('searches the signed-in account on Forgejo, which ignores created_by', async () => {

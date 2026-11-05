@@ -13,12 +13,14 @@ type ForgejoIssue = {
 }
 
 /**
- * Searches the threads of the account the token belongs to on Forgejo.
+ * Searches the threads of the account the token belongs to on Forgejo, or in one Gitea repository.
  *
  * Forgejo's issue search ignores `created_by`, which `search.threads({ author })` in `forges` 0.3 sends.
  * The search then returns every thread on the instance with its total, and `forges` drops the ones by
  * other authors, so pages come back nearly empty. The search does apply `created=true` to the signed-in
  * account, and a repository's issue list does apply `created_by`.
+ * Gitea's `forges` repository search filters the global search after pagination, so use the repository
+ * issue list there too, keeping both pages and totals scoped to the requested repository.
  */
 export async function searchOwnForgejoThreads(provider: ForgeProvider, query: ThreadSearchQuery): Promise<Page<Thread>> {
   const page = Number(query.cursor?.token ?? 1)

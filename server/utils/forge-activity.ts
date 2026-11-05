@@ -104,7 +104,8 @@ async function toItem(provider: ForgeProvider, thread: Thread, readRepo: Reposit
 
 /** One page of a thread search. Searches by `author` expect the account the token belongs to. */
 export function searchThreadsPage(provider: ForgeProvider, query: ThreadSearchQuery) {
-  return provider.forge === 'forgejo' ? searchOwnForgejoThreads(provider, query) : provider.search.threads(query).page()
+  if (provider.forge === 'forgejo' || (provider.forge === 'gitea' && query.repo)) return searchOwnForgejoThreads(provider, query)
+  return provider.search.threads(query).page()
 }
 
 export async function fetchForgePage(provider: ForgeProvider, query: ThreadSearchQuery, secret: string, readRepo: RepositoryReader, cursor?: Cursor) {
