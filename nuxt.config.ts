@@ -55,7 +55,7 @@ export default defineNuxtConfig({
 
   vitehub: {
     name: 'my-pull-requests',
-    preset: process.env.VERCEL ? 'vercel' : 'cloudflare',
+    host: process.env.VERCEL ? 'vercel' : 'cloudflare',
     kv: true,
     schedule: true,
     workflow: true,

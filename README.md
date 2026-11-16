@@ -62,7 +62,7 @@ Monthly email also needs `RECAP_FROM`, `RECAP_TO`, and `RECAP_SITE_URL`. Recap i
 
 ## Deploy
 
-Choose a ViteHub preset in `nuxt.config.ts`, configure KV and email for that host, then run `pnpm build`. See the [host support matrix](https://vitehub.dev/docs/frameworks-hosts/support-matrix).
+Choose a ViteHub host in `nuxt.config.ts`, configure KV and email for that host, then run `pnpm build`. See the [host support matrix](https://vitehub.dev/docs/frameworks-hosts/support-matrix).
 
 ## Credits
 

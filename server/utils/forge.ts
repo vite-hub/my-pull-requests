@@ -1,6 +1,6 @@
 import { forgejo, gitea, github, gitlab, type ForgeProvider } from 'forges'
 import type { GitHubProvider } from 'forges/github'
-import { useServerEnv } from '#vitehub/env/server'
+import { useServerEnv } from 'vite-hub/env'
 
 import { forgeCapabilities, type ForgeKind } from '../../shared/utils/activity-query'
 
