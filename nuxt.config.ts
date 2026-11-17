@@ -36,6 +36,10 @@ export default defineNuxtConfig({
             enabled: true,
           },
         },
+        vars: {
+          // Public key of the console.vitehub.dev link. The Console signs each call to /_vitehub/rpc with its private key.
+          VITEHUB_CONSOLE_KEY_CONSOLE_1FD8A540: '_PTs6vR6g_1820RsWskMBuozwlgCU83DCpEk8ZlaThg',
+        },
       },
     },
   },
@@ -56,6 +60,9 @@ export default defineNuxtConfig({
   vitehub: {
     name: 'my-pull-requests',
     host: process.env.VERCEL ? 'vercel' : 'cloudflare',
+    // Workflow steps run without a request, so the recap email links to this origin.
+    publicUrl: 'https://prs.onmax.me',
+    console: true,
     kv: true,
     schedule: true,
     workflow: true,
@@ -81,7 +88,6 @@ export default defineNuxtConfig({
         },
         recap: {
           from: env({ source: env.source('RECAP_FROM') }),
-          siteUrl: env({ source: env.source('RECAP_SITE_URL') }),
           to: env({ source: env.source('RECAP_TO') }),
         },
       },
