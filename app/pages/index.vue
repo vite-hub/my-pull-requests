@@ -103,7 +103,7 @@ useHead({
 const url = useRequestURL()
 const description = computed(() => isFiltered.value
   ? `${formatTotal(current.value.prs)} pull requests and ${formatTotal(current.value.issues)} issues by ${user.name} matching “${query.value}”.`
-  : `Discover ${user.name} recent pull requests and issues on ${forge.value.name}.`)
+  : `Discover ${user.name}'s recent pull requests and issues on ${forge.value.name}.`)
 useSeoMeta({
   title: `${user.name} is Contributing`,
   description,
