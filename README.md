@@ -58,11 +58,13 @@ The filter supports everything on GitHub. GitLab, Forgejo and Gitea use their ow
 pnpm dev
 ```
 
-Monthly email also needs `RECAP_FROM`, `RECAP_TO`, and `RECAP_SITE_URL`. Recap images need `NUXT_APP_SECRET`, at least 32 characters, to sign their URLs. Generate one with `npx nuxt-og-image generate-secret`.
+Monthly email also needs `RECAP_FROM` and `RECAP_TO`. Its recap link uses `publicUrl` in `nuxt.config.ts`. Recap images need `NUXT_APP_SECRET`, at least 32 characters, to sign their URLs. Generate one with `npx nuxt-og-image generate-secret`.
 
 ## Deploy
 
 Choose a ViteHub host in `nuxt.config.ts`, configure KV and email for that host, then run `pnpm build`. See the [host support matrix](https://vitehub.dev/docs/frameworks-hosts/support-matrix).
+
+The app is linked to the [ViteHub Console](https://console.vitehub.dev) with `console: true`. The Console signs each call, and the Worker keeps only the public key of the link, `VITEHUB_CONSOLE_KEY_CONSOLE_1FD8A540` in the Wrangler `vars` of `nuxt.config.ts`. On your own deployment, link your URL in the Console and put the line it shows there instead. Set `publicUrl` in `nuxt.config.ts` to your URL too, since the recap email links to it.
 
 ## Credits
 
