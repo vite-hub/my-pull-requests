@@ -13,8 +13,6 @@ allowBuilds:
   vue-demi: false
   workerd: true
 
-blockExoticSubdeps: false
-
 ignoredBuiltDependencies:
   - '@vercel/speed-insights'
 
